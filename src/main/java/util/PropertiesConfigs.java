@@ -64,11 +64,7 @@ public class PropertiesConfigs {
         Const.sourceFilePath = props.getProperty("sourceFilePath");
         Const.saveFilePath = props.getProperty("saveFilePath");
         Const.aimsType = props.getProperty("aimsType");
-        //Const.PdschPrbAssn = props.getProperty("PdschPrbAssn");
-        //Const.PuschPrbAssn = props.getProperty("PuschPrbAssn");
-        //Const.NbrCqi = props.getProperty("NbrCqi");
-        //Const.ULMeanNL =props.getProperty("ULMeanNL");
-        //Const.FileVersion =props.getProperty("FileVersion");
+
         Const.TestModel =props.getProperty("TestModel");
         Const.TestFileNameMMss =props.getProperty("TestFileNameMMss");
         Const.TestDirNameYmDH =props.getProperty("TestDirNameYmDH");

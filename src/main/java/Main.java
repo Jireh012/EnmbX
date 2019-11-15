@@ -59,6 +59,7 @@ public class Main {
         // 获得工作表
         XSSFSheet sheet = workbook.getSheetAt(0);
         Map<String, List<String>> map = new HashMap<>();
+        Map<String, List<String>> map2 = new HashMap<>();
         for (int s = 1; s < sheet.getPhysicalNumberOfRows(); s++) {
             XSSFRow sheetRow = sheet.getRow(s);
             String source = sheetRow.getCell(0).toString();
@@ -68,25 +69,48 @@ public class Main {
             int puschPrbAssn = (int)sheetRow.getCell(4).getNumericCellValue();
             int nbrCqi = (int)sheetRow.getCell(5).getNumericCellValue();
             int ulmeannl = (int)sheetRow.getCell(6).getNumericCellValue();
+            int estab= (int)sheetRow.getCell(7).getNumericCellValue();
+
+            int sum01=pdschPrbAssn+puschPrbAssn+nbrCqi+ulmeannl;
 
             // map是否包含此key，若已经包含则添加一个新的数字到对应value集合中
             String e = source + "￥" + type1 + "￥" +
-                    aims + "￥" + pdschPrbAssn + "￥" + puschPrbAssn + "￥" + nbrCqi + "￥" + ulmeannl;
-            if (map.containsKey(source + "￥" + type1)) {
-                map.get(source + "￥" + type1).add(e);
-            } else {
-                // map不包含此key，则重新创建一个新集合，并把这个数字添加进集合
-                // ，再把集合放到map中
-                List<String> newList = new ArrayList<>();
-                newList.add(e);
-                map.put(source + "￥" + type1, newList);
+                    aims + "￥" + pdschPrbAssn + "￥" + puschPrbAssn + "￥" + nbrCqi +
+                    "￥" + ulmeannl+ "￥" +estab;
+            if(sum01>0){
+                if (map.containsKey(source + "￥" + type1)) {
+                    map.get(source + "￥" + type1).add(e);
+                } else {
+                    // map不包含此key，则重新创建一个新集合，并把这个数字添加进集合
+                    // ，再把集合放到map中
+                    List<String> newList = new ArrayList<>();
+                    newList.add(e);
+                    map.put(source + "￥" + type1, newList);
+                }
+            }
+
+            if (estab==1){
+                if (map2.containsKey(source + "￥" + type1)) {
+                    map2.get(source + "￥" + type1).add(e);
+                } else {
+                    // map不包含此key，则重新创建一个新集合，并把这个数字添加进集合
+                    // ，再把集合放到map中
+                    List<String> newList = new ArrayList<>();
+                    newList.add(e);
+                    map2.put(source + "￥" + type1, newList);
+                }
             }
         }
+
         int threadNum = map.size();
+        int threadNum2 = map2.size();
         CountDownLatch threadSignal1 = new CountDownLatch(threadNum);
+        CountDownLatch threadSignal2 = new CountDownLatch(threadNum2);
         ThreadFactory threadFactory = new ThreadFactoryBuilder()
                 .setNameFormat("enmbx-pool-%d").setDaemon(true).build();
         ScheduledExecutorService executorService = new ScheduledThreadPoolExecutor(threadNum,
+                threadFactory);
+        ScheduledExecutorService executorService2 = new ScheduledThreadPoolExecutor(threadNum2,
                 threadFactory);
         for (Map.Entry<String, List<String>> entry : map.entrySet()) {
             Runnable task = new SourceThread(threadSignal1, entry);
@@ -94,11 +118,19 @@ public class Main {
             executorService.execute(task);
         }
 
+        for (Map.Entry<String, List<String>> entry : map2.entrySet()) {
+            Runnable task = new ConnEstabThread(threadSignal2, entry);
+            // 执行
+            executorService2.execute(task);
+        }
+
         // 等待所有子线程执行完
         threadSignal1.await();
+        threadSignal2.await();
         //固定线程池执行完成后 将释放掉资源 退出主进程
         //并不是终止线程的运行，而是禁止在这个Executor中添加新的任务
         executorService.shutdown();
+        executorService2.shutdown();
 
         SftpUtilM.logoutList();
         // do work end

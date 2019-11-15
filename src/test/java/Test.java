@@ -9,10 +9,7 @@ import java.nio.charset.StandardCharsets;
 import java.text.DecimalFormat;
 import java.text.MessageFormat;
 import java.text.SimpleDateFormat;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.Properties;
-import java.util.Random;
+import java.util.*;
 import java.util.zip.GZIPInputStream;
 
 import static util.Const.*;
@@ -37,6 +34,8 @@ public class Test {
     }
 
     public static void main(String[] args) throws IOException, SftpException {
+        Map<String, List<String>> map = new HashMap<>();
+        System.out.println(map.size());
         //System.out.println(getPath());;
     }
 
