@@ -30,7 +30,7 @@ public class Main {
     private static Logger logger = Logger.getLogger(Main.class);
 
     public static void main(String[] args) throws Exception {
-        logger.info("===========main开始===========");
+        logger.info("===========main开始============");
         startTime = System.currentTimeMillis();
         try {
             if (args.length == 0) {
