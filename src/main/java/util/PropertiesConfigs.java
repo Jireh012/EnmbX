@@ -63,7 +63,6 @@ public class PropertiesConfigs {
         props.load(in);
         Const.sourceFilePath = props.getProperty("sourceFilePath");
         Const.saveFilePath = props.getProperty("saveFilePath");
-        Const.aimsType = props.getProperty("aimsType");
 
         Const.TestModel =props.getProperty("TestModel");
         Const.TestFileNameMMss =props.getProperty("TestFileNameMMss");
@@ -95,6 +94,22 @@ public class PropertiesConfigs {
         loadProperty(props, in);
         Properties props1 = new Properties();
         InputStreamReader in1 = new InputStreamReader(new BufferedInputStream(Objects.requireNonNull(PropertiesConfigs.class.getClassLoader().getResourceAsStream("sourceConfig.properties"))), StandardCharsets.UTF_8);
+        props1.load(in1);
+        Const.SOURCE_PRO=props1;
+    }
+
+    public static void loadConf1() throws Exception {
+        Properties props = new Properties();
+        InputStreamReader in = new InputStreamReader(new BufferedInputStream(Objects.requireNonNull(PropertiesConfigs.class.getClassLoader().getResourceAsStream("config1.properties"))), StandardCharsets.UTF_8);
+        loadProperty(props, in);
+        Const.downFieldConfigFile =props.getProperty("downFieldConfigFile");
+        Const.url=props.getProperty("url");
+        Const.name=props.getProperty("name");
+        Const.user=props.getProperty("user");
+        Const.password=props.getProperty("password");
+
+        Properties props1 = new Properties();
+        InputStreamReader in1 = new InputStreamReader(new BufferedInputStream(Objects.requireNonNull(PropertiesConfigs.class.getClassLoader().getResourceAsStream("sourceConfig1.properties"))), StandardCharsets.UTF_8);
         props1.load(in1);
         Const.SOURCE_PRO=props1;
     }

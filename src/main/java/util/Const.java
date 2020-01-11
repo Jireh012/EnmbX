@@ -2,6 +2,7 @@ package util;
 
 import com.jcraft.jsch.Channel;
 
+import java.sql.Connection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
@@ -12,6 +13,7 @@ import java.util.Properties;
 public class Const {
 	public static String sourceFilePath="";
 	public static String saveFilePath="";
+	public static String downFieldConfigFile="";
 	public static String aimsType="";
 	public static String TestModel="";
 	public static String TestFileNameMMss="";
@@ -46,5 +48,15 @@ public class Const {
 	public static final Map<String, Channel> SFTP_CHANNEL_POOL = new HashMap<String, Channel>();
 	public static final Map<String, String> FILE_IS_DOWN = new HashMap<String, String>();
 	public static Properties SOURCE_PRO = null;
+
+	/**
+	 * 数据库连接
+	 */
+	public static Connection conn = null;
+
+	public static String url="";
+	public static String name="";
+	public static String user="";
+	public static String password="";
 
 }
