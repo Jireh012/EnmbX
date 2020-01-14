@@ -3,6 +3,7 @@ package util;
 import org.apache.log4j.Logger;
 import sun.java2d.cmm.Profile;
 
+
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
@@ -57,6 +58,17 @@ public class PropertiesConfigs {
         Properties props = new Properties();
         InputStreamReader in = new InputStreamReader(new BufferedInputStream(new FileInputStream(path)), StandardCharsets.UTF_8);
         loadProperty(props, in);
+    }
+
+    public static void loadConf1(String path) throws Exception {
+        Properties props = new Properties();
+        InputStreamReader in = new InputStreamReader(new BufferedInputStream(new FileInputStream(path)), StandardCharsets.UTF_8);
+        loadProperty(props, in);
+        Const.downFieldConfigFile =props.getProperty("downFieldConfigFile");
+        Const.url=props.getProperty("url");
+        Const.name=props.getProperty("name");
+        Const.user=props.getProperty("user");
+        Const.password=props.getProperty("password");
     }
 
     private static void loadProperty(Properties props, InputStreamReader in) throws IOException {

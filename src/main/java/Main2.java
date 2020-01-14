@@ -10,7 +10,6 @@ import util.SftpUtilM;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.text.DecimalFormat;
@@ -25,10 +24,11 @@ import static util.Const.*;
 
 /**
  * @author last_
+ * Sftp Files download export to Sql
  */
-public class DataToSqlMain {
+public class Main2 {
 
-    private static Logger logger = Logger.getLogger(DataToSqlMain.class);
+    private static Logger logger = Logger.getLogger(Main2.class);
 
     public static void main(String[] args) throws Exception {
         logger.info("===========main开始============");
@@ -37,8 +37,9 @@ public class DataToSqlMain {
             if (args.length == 0) {
                 PropertiesConfigs.loadConf1();
             } else {
-                PropertiesConfigs.loadConf(args[0]);
+                PropertiesConfigs.loadConf1(args[0]);
                 PropertiesConfigs.loadSource(args[1]);
+                System.out.println(name);
             }
         } catch (Exception e) {
             //读取配置异常
@@ -64,22 +65,24 @@ public class DataToSqlMain {
         Map<String, String> map = new HashMap<>();
         for (int s = 1; s < sheet.getPhysicalNumberOfRows(); s++) {
             XSSFRow sheetRow = sheet.getRow(s);
+            System.out.println(sheetRow.getCell(0).toString());
             String source = sheetRow.getCell(0).toString();
             String type = sheetRow.getCell(1).toString();
             map.put(source, type);
         }
 
-        File xlsFileDown = new File(sourceFilePath);
+        File xlsFileDown = new File(downFieldConfigFile);
         // 获得工作簿
         XSSFWorkbook workbookDown = new XSSFWorkbook(new FileInputStream(xlsFileDown));
         // 获得工作表
         XSSFSheet sheetDown = workbookDown.getSheetAt(0);
         Map<String, Integer> mapDown = new HashMap<>();
         for (int s = 1; s < sheetDown.getPhysicalNumberOfRows(); s++) {
-            XSSFRow sheetRow = sheet.getRow(s);
+            XSSFRow sheetRow = sheetDown.getRow(s);
             String key = sheetRow.getCell(0).toString();
-            int value = Integer.parseInt(sheetRow.getCell(2).toString());
+            int value = new Double(sheetRow.getCell(2).getNumericCellValue()).intValue();
             String type = sheetRow.getCell(3).toString();
+
 
             mapDown.put(key+"$"+type, value);
         }
@@ -104,6 +107,8 @@ public class DataToSqlMain {
         executorService.shutdown();
 
         SftpUtilM.logoutList();
+        conn.close();
+
         // do work end
         //退出主进程
         logger.info("===========主程序结束===========");

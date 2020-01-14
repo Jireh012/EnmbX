@@ -1,22 +1,16 @@
 import com.csvreader.CsvReader;
-import com.csvreader.CsvWriter;
 import com.jcraft.jsch.ChannelSftp;
 import com.jcraft.jsch.SftpException;
 import org.apache.log4j.Logger;
-import util.CompressFileGZIP;
-import util.Const;
+
 import util.SftpUtilM;
 import util.UnCompressFileGZIP;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.nio.charset.StandardCharsets;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-import java.util.Random;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import java.util.*;
 import java.util.concurrent.CountDownLatch;
 
 import static util.Const.*;
@@ -70,7 +64,6 @@ public class Source1Thread implements Runnable {
         if (sftp == null) {
             logger.warn("SFTP登陆失败，请检查网络和连接参数");
         } else {
-            String type = sourceData.getValue();
             logger.info("SFTP登陆成功耗时：" + (System.currentTimeMillis() - startTime) / 1000 + " (秒)");
             String path;
             String fileName;
@@ -162,47 +155,10 @@ public class Source1Thread implements Runnable {
                 }
             }
             UnCompressFileGZIP.doUncompressFile(path + fileName + ".gz");
-            isChartPathExist(path + "Write" + File.separator);
-            File y1 = new File(path + fileName + ".gz");
-            logger.info(fileName + ".gz " + "原文件大小：" + y1.length());
-            csvRun(path + fileName, path + "Write" + File.separator + fileName,
-                    sourceData.getValue());
+
+            csvRun(path + fileName, sourceData.getValue());
             logger.info("文件处理耗时：" + (System.currentTimeMillis() - startTime) / 1000 + " (秒)");
 
-            CompressFileGZIP.doCompressFile(path + "Write" + File.separator + fileName);
-            File file = new File(path + "Write" + File.separator + fileName + ".gz");
-            logger.info(fileName + ".gz " + "文件大小：" + file.length());
-            try {
-                InputStream is = new FileInputStream(file);
-                if ("1".equals(TestModel)) {
-                    SftpUtilM.upload(sftp, "/", properties.get(source + ".path") + "/" +
-                            TestDirNameYmDH, fileName + ".gz", is);
-                } else {
-                    SftpUtilM.upload(sftp, "/", properties.get(source + ".path") + "/" +
-                            nowTime, fileName + ".gz", is);
-                }
-                logger.info("=======" + source + "上传成功=======");
-                long dalen;
-                if ("1".equals(TestModel)) {
-                    dalen = SftpUtilM.listFiles1(sftp, properties.get(source + ".path") + "/" +
-                            TestDirNameYmDH + "/PM-ENB-EUTRANCELLTDD" + "-" +
-                            properties.get(source + ".id") + "-*-" + TestDirNameYmDH + TestFileNameMMss + "-15.csv.gz").getSize();
-                    logger.info("PM-ENB-EUTRANCELLTDD" + "-" +
-                            properties.get(source + ".id") + "-*-" + TestDirNameYmDH + TestFileNameMMss + "-15.csv.gz  文件大小为：" + dalen);
-                } else {
-                    dalen = SftpUtilM.listFiles1(sftp, properties.get(source + ".path") + "/" +
-                            nowTime + "/PM-ENB-EUTRANCELLTDD" + "-" +
-                            properties.get(source + ".id") + "-*-" + nowTime + TimeMm + "-15.csv.gz").getSize();
-                    logger.info("PM-ENB-EUTRANCELLTDD" + "-" +
-                            properties.get(source + ".id") + "-*-" + nowTime + TimeMm + "-15.csv.gz  文件大小为：" + dalen);
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
-                logger.error("文件操作异常：" + e.getMessage());
-            } catch (SftpException e) {
-                e.printStackTrace();
-                logger.error("SFTP操作异常：" + e.getMessage());
-            }
         }
 
         // 线程结束时计数器减1
@@ -212,146 +168,85 @@ public class Source1Thread implements Runnable {
                 (System.currentTimeMillis() - startTime) / 1000 + " (秒)");
     }
 
-    private void csvRun(String readerPath, String writePath, String value) {
+    private void csvRun(String readerPath, String value) {
         try {
             CsvReader reader = new CsvReader(readerPath, '|', StandardCharsets.UTF_8);
             boolean isFirst = true;
-            String[] stringList;
+            String[] sL;
             reader.readHeaders();
-            //读取表头 TimeStamp
-            String[] title = reader.getHeaders();
-            CsvWriter writerTemp = new CsvWriter(writePath, '|', StandardCharsets.UTF_8);
-            writerTemp.setUseTextQualifier(false);
-            writerTemp.writeRecord(title);
             int count = 0;
+            StringBuffer prefix = new StringBuffer();
+            // 保存sql后缀
+            StringBuffer suffix = new StringBuffer();
+            long begin = 0L;
+
+            if (value.equals("1")) {
+                // sql前缀
+                prefix.append("INSERT INTO LTEtemp_小区性能指标_15分钟_FTPtemp (rmUID,UserLabel,StartTime");
+            } else {
+                // sql前缀
+                prefix.append("INSERT INTO LTEtemp_小区性能指标_15分钟_FTPtemp_5G (rmUID,UserLabel,StartTime");
+            }
+
+            for (final Map.Entry<String, Integer> map : downField.entrySet()) {
+                if (map.getKey().split("$")[1].equals(value)) {
+                    prefix.append(",").append(map.getKey().split("$")[0]);
+                }
+            }
+            prefix.append(") VALUES");
+
             // 读取每行的内容
             while (reader.readRecord()) {
                 if (isFirst) {
                     isFirst = false;
                     //读取列头 rmUID
-                    writerTemp.writeRecord(reader.getValues());
                     initDataPosition(reader);
                 } else {
                     //每一行的值
-                    stringList = reader.getValues();
-                    stringList[2] = "\"" + stringList[2] + "\"";
+                    sL = reader.getValues();
+                    sL[2] = "\"" + sL[2] + "\"";
+
+                    // 构建SQL后缀
+                    suffix.append("('").append(sL[0]).append("' ").append(",'").append(sL[2]).append("'").append(",'").append(sL[3]).append("'");
+
+                    //读取每个单元格
                     for (final Map.Entry<String, Integer> map : downField.entrySet()) {
-                        if (map.getKey().split("$")[1].equals(value) && map.getValue()==count) {
-
-
-                            logger.info(reader.get(count));
+                        for (int i = 0; i < sL.length - 1; i++) {
+                            if (map.getKey().split("$")[1].equals(value) && map.getValue() == i) {
+                                if (begin == 0L) begin = new Date().getTime();
+                                suffix.append(",'").append(sL[i]).append("' ");
+                            }
                         }
                     }
-
-
-//                    if (value.toString().contains(reader.get(Integer.parseInt(Const.aimsType)) + "￥")) {
-//                        for (String li : value) {
-//                            if (reader.get(Integer.parseInt(Const.aimsType)).equals(li.split("￥")[2])) {
-//                                int pdschPrbAssn = Integer.parseInt(li.split("￥")[3]);
-//                                int puschPrbAssn = Integer.parseInt(li.split("￥")[4]);
-//                                int nbrCqi = Integer.parseInt(li.split("￥")[5]);
-//                                int ulmeannl = Integer.parseInt(li.split("￥")[6]);
-//                                try {
-//                                    if (pdschPrbAssn == 1) {
-//                                        int pdschPrbAssnData = StringToInt(reader.get(private int RRU_PdschPrbAssn_position));
-//                                        int pdschPrbTotData = StringToInt(reader.get(private int RRU_PdschPrbTot_position));
-//                                        if ((float) pdschPrbAssnData / pdschPrbTotData > 0.5) {
-//                                            logger.info("下行指标修正 当前：" + reader.get(2));
-//                                            logger.info("下行指标 当前值：" + pdschPrbAssnData);
-//                                            int min = 40, max = 50;
-//                                            double rd = (double) (min + (int) (Math.random() * ((max - min) + 1))) / 100;
-//                                            //下行修改完成
-//                                            stringList[private int RRU_PdschPrbAssn_position] = String.valueOf(
-//                                                    (int) (rd * pdschPrbAssnData / 100) * 100);
-//                                            logger.info("下行指标 修改后值：" + stringList[private int RRU_PdschPrbAssn_position]);
-//                                        }
-//                                    }
-//                                } catch (Exception e) {
-//                                    e.printStackTrace();
-//                                    logger.warn("aims: " + reader.get(2) + "\n源数据异常: " + e.getMessage());
-//                                }
-//
-//                                try {
-//                                    if (puschPrbAssn == 1) {
-//                                        //上行
-//                                        int puschPrbAssnData = StringToInt(reader.get(private int RRU_PuschPrbAssn_position));
-//                                        int puschPrbTot = StringToInt(reader.get(private int RRU_PuschPrbTot_position));
-//                                        if ((float) puschPrbAssnData / puschPrbTot > 0.5) {
-//                                            logger.info("上行指标修正 当前" + reader.get(2));
-//                                            logger.info("上行指标 当前值" + puschPrbAssnData);
-//                                            int min = 40, max = 50;
-//                                            double rd = (double) (min + (int) (Math.random() * ((max - min) + 1))) / 100;
-//                                            stringList[private int RRU_PuschPrbAssn_position] = String.valueOf(
-//                                                    (int) (rd * puschPrbAssnData / 100) * 100);
-//                                            logger.info("上行指标 修改后值：" + stringList[private int RRU_PuschPrbAssn_position]);
-//                                        }
-//                                    }
-//                                } catch (Exception e) {
-//                                    e.printStackTrace();
-//                                    logger.warn("aims: " + reader.get(2) + "\n源数据异常: " + e.getMessage());
-//                                }
-//
-//                                try {
-//                                    if (nbrCqi == 1) {
-//                                        int sum0To6 = 0, sum7To15 = 0;
-//                                        int[] intList = new int[7];
-//                                        for (int i = 0; i <= 15; i++) {
-//                                            if (i <= 6) {
-//                                                sum0To6 = sum0To6 + Integer.parseInt(reader.get(getPHYNbrCqiposition(i)));
-//                                                intList[i] = Integer.parseInt(reader.get(getPHYNbrCqiposition(i)));
-//                                            } else {
-//                                                sum7To15 = sum7To15 + Integer.parseInt(reader.get(getPHYNbrCqiposition(i)));
-//                                            }
-//                                        }
-//                                        if ((float) sum0To6 / (sum0To6 + sum7To15) > 0.2) {
-//                                            logger.info("NbrCqi指标修正 当前" + reader.get(2));
-//                                            double n = Math.ceil(sum0To6 - 0.25 * sum7To15);
-//                                            int rnd = (int) (new Random().nextDouble() * (sum0To6 - (n)) + (n));
-//                                            for (int j = 0; j <= 6; j++) {
-//                                                logger.info("NbrCqi指标" + j + " 修正前：" + stringList[getPHYNbrCqiposition(j)]);
-//                                                double bl = (double) intList[j] / sum0To6;
-//                                                stringList[getPHYNbrCqiposition(j)] = String.valueOf(Integer.parseInt(
-//                                                        stringList[getPHYNbrCqiposition(j)]) - (int) (rnd * bl));
-//                                                logger.info("NbrCqi指标" + j + " 修正后：" + stringList[getPHYNbrCqiposition(j)]);
-//                                            }
-//                                        }
-//
-//                                    }
-//                                } catch (Exception e) {
-//                                    e.printStackTrace();
-//                                    logger.warn("aims: " + reader.get(2) + "\n源数据异常: " + e.getMessage());
-//                                }
-//
-//                                try {
-//                                    if (ulmeannl == 1) {
-//                                        for (int i = 0; i <= 99; i++) {
-//                                            if (!reader.get(getPHYULMeanNLPRBPosition(i)).isEmpty() && Integer.parseInt(reader.get(getPHYULMeanNLPRBPosition(i))) > -110) {
-//                                                logger.info("ULMeanNL指标修正 当前:" + reader.get(2));
-//                                                logger.info("ULMeanNL指标 当前:" + reader.get(getPHYULMeanNLPRBPosition(i)));
-//                                                int min1 = 114, max1 = 118;
-//                                                int rd1 = 0 - (min1 + (int) (Math.random() * ((max1 - min1) + 1)));
-//                                                stringList[getPHYULMeanNLPRBPosition(i)] = String.valueOf(rd1);
-//                                                logger.info("ULMeanNL指标 修改后:" + stringList[getPHYULMeanNLPRBPosition(i)]);
-//                                            }
-//                                        }
-//                                    }
-//                                } catch (Exception e) {
-//                                    e.printStackTrace();
-//                                    logger.warn("aims: " + reader.get(2) + "\n源数据异常: " + e.getMessage());
-//                                }
-//                                break;
-//                            }
-//                        }
-//                    }
-
-                    writerTemp.writeRecord(stringList);
+                    suffix.append("),");
+                    count++;
                 }
+
             }
+            try {
+                // 构建完整SQL
+                String sql = prefix + suffix.substring(0, suffix.length() - 1);
+                // 比起st，pst会更好些
+                PreparedStatement pst = (PreparedStatement) conn.prepareStatement("");//准备执行语句
+                // 添加执行SQL
+                pst.addBatch(sql);
+                // 执行操作
+                pst.executeBatch();
+                // 提交事务
+                conn.commit();
+
+                // 头等连接
+                pst.close();
+            } catch (SQLException e) {
+                logger.error("数据库错误：" + e.getMessage());
+            }
+
+            // 结束时间
+            Long end = new Date().getTime();
+            // 耗时
+            System.out.println(count + "条数据插入花费时间 : " + (end - begin) / 1000 + " s" + "  插入完成");
             reader.close();
-            // 关闭Writer
-            writerTemp.close();
         } catch (IOException e) {
-            e.printStackTrace();
             logger.error("文件流操作异常：" + e.getMessage());
         }
     }
