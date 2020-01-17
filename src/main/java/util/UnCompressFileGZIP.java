@@ -28,11 +28,15 @@ public class UnCompressFileGZIP {
                 System.exit(1);
             }
 
+            FileInputStream input = new FileInputStream(inFileName);
+            if (input.available()==0){
+                logger.error("File error. " + inFileName);
+            }
+
             GZIPInputStream in = null;
             try {
                 in = new GZIPInputStream(new FileInputStream(inFileName));
             } catch (FileNotFoundException e) {
-                System.err.println("File not found. " + inFileName);
                 logger.error("File not found. " + inFileName);
             }
 

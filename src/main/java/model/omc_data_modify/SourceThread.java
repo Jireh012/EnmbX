@@ -539,26 +539,14 @@ public class SourceThread implements Runnable {
                     SftpUtilM.delete(sftp, properties.get(source + ".path") + "/" + nowTime, fileName + ".gz");
                 }
             }
-            try {
-                UnCompressFileGZIP.doUncompressFile(path + fileName + ".gz");
-            }catch (Exception e){
-                e.printStackTrace();
-                logger.error(e.getMessage());
-                return;
-            }
+            UnCompressFileGZIP.doUncompressFile(path + fileName + ".gz");
             isChartPathExist(path + "Write" + File.separator);
             File y1 = new File(path + fileName + ".gz");
             logger.info(fileName + ".gz " + "原文件大小：" + y1.length());
             csvRun(path + fileName, path + "Write" + File.separator + fileName,
                     sourceData.getValue());
             logger.info("文件处理耗时：" + (System.currentTimeMillis() - startTime) / 1000 + " (秒)");
-            try {
-                CompressFileGZIP.doCompressFile(path + "Write" + File.separator + fileName);
-            }catch (Exception e){
-                e.printStackTrace();
-                logger.error(e.getMessage());
-                return;
-            }
+            CompressFileGZIP.doCompressFile(path + "Write" + File.separator + fileName);
             File file = new File(path + "Write" + File.separator + fileName + ".gz");
             logger.info(fileName + ".gz " + "文件大小：" + file.length());
             try {
@@ -723,13 +711,13 @@ public class SourceThread implements Runnable {
                                 try {
                                     if (on1 == 1) {
                                         logger.info("ERAB_HoFail_1 指标修正 当前：" + reader.get(2));
-                                        stringList[ERAB_HoFail_1]= String.valueOf(0);
+                                        stringList[ERAB_HoFail_1] = String.valueOf(0);
                                         logger.info("ERAB_NbrAttEstab_1 指标修正 当前：" + reader.get(2));
-                                        stringList[ERAB_NbrAttEstab_1]=stringList[ERAB_NbrSuccEstab_1];
+                                        stringList[ERAB_NbrAttEstab_1] = stringList[ERAB_NbrSuccEstab_1];
                                         logger.info("ERAB_NbrReqRelEnb_1 标修正 当前：" + reader.get(2));
-                                        stringList[ERAB_NbrReqRelEnb_1]=stringList[ERAB_NbrReqRelEnb_Normal_1];
+                                        stringList[ERAB_NbrReqRelEnb_1] = stringList[ERAB_NbrReqRelEnb_Normal_1];
                                         logger.info("RRC_AttConnEstab 标修正 当前：" + reader.get(2));
-                                        stringList[RRC_AttConnEstab]=stringList[RRC_SuccConnEstab];
+                                        stringList[RRC_AttConnEstab] = stringList[RRC_SuccConnEstab];
                                     }
                                 } catch (Exception e) {
                                     e.printStackTrace();
