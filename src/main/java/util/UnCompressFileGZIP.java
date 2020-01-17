@@ -21,7 +21,6 @@ public class UnCompressFileGZIP {
      * @param inFileName Name of the file to be uncompressed
      */
     public static void doUncompressFile(String inFileName) {
-
         try {
 
             if (!getExtension(inFileName).equalsIgnoreCase("gz")) {
@@ -34,7 +33,7 @@ public class UnCompressFileGZIP {
                 in = new GZIPInputStream(new FileInputStream(inFileName));
             } catch (FileNotFoundException e) {
                 System.err.println("File not found. " + inFileName);
-                System.exit(1);
+                logger.error("File not found. " + inFileName);
             }
 
             String outFileName = getFileName(inFileName);
@@ -42,8 +41,8 @@ public class UnCompressFileGZIP {
             try {
                 out = new FileOutputStream(outFileName);
             } catch (FileNotFoundException e) {
-                System.err.println("Could not write to file. " + outFileName);
-                System.exit(1);
+                e.printStackTrace();
+                logger.error("Could not write to file. " + outFileName);
             }
 
             byte[] buf = new byte[1024];
@@ -55,7 +54,7 @@ public class UnCompressFileGZIP {
             in.close();
             out.close();
 
-        } catch (IOException e) {
+        } catch (Exception e) {
             e.printStackTrace();
             System.exit(1);
             logger.error("文件解压异常: "+e.getMessage());

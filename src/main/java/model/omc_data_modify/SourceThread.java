@@ -1,3 +1,5 @@
+package model.omc_data_modify;
+
 import com.csvreader.CsvReader;
 import com.csvreader.CsvWriter;
 import com.jcraft.jsch.ChannelSftp;
@@ -27,7 +29,7 @@ public class SourceThread implements Runnable {
 
     private Logger logger = Logger.getLogger(SourceThread.class);
 
-    SourceThread(CountDownLatch threadsSignal, Map.Entry<String, List<String>> sourceData) {
+    public SourceThread(CountDownLatch threadsSignal, Map.Entry<String, List<String>> sourceData) {
         this.threadsSignal = threadsSignal;
         this.sourceData = sourceData;
     }
@@ -37,6 +39,29 @@ public class SourceThread implements Runnable {
         //初始化相关列位置
         while (i < reader.getValues().length) {
             switch (reader.get(i)) {
+                case "RRC.SuccConnEstab":
+                    RRC_SuccConnEstab = i;
+                    break;
+                case "RRU.AttConnEstab":
+                    RRC_AttConnEstab = i;
+                    break;
+                case "ERAB.HoFail.1":
+                    ERAB_HoFail_1 = i;
+                    break;
+                case "ERAB.NbrAttEstab.1":
+                    ERAB_NbrAttEstab_1 = i;
+                    break;
+                case "ERAB.NbrSuccEstab.1":
+                    ERAB_NbrSuccEstab_1 = i;
+                    break;
+                case "ERAB_NbrReqRelEnb_1":
+                    ERAB_NbrReqRelEnb_1 = i;
+                    break;
+                case "ERAB_NbrReqRelEnb_Normal_1":
+                    ERAB_NbrReqRelEnb_Normal_1 = i;
+                    break;
+
+
                 case "RRU.PdschPrbAssn":
                     RRU_PdschPrbAssn_position = i;
                     break;
@@ -514,15 +539,26 @@ public class SourceThread implements Runnable {
                     SftpUtilM.delete(sftp, properties.get(source + ".path") + "/" + nowTime, fileName + ".gz");
                 }
             }
-            UnCompressFileGZIP.doUncompressFile(path + fileName + ".gz");
+            try {
+                UnCompressFileGZIP.doUncompressFile(path + fileName + ".gz");
+            }catch (Exception e){
+                e.printStackTrace();
+                logger.error(e.getMessage());
+                return;
+            }
             isChartPathExist(path + "Write" + File.separator);
             File y1 = new File(path + fileName + ".gz");
             logger.info(fileName + ".gz " + "原文件大小：" + y1.length());
             csvRun(path + fileName, path + "Write" + File.separator + fileName,
                     sourceData.getValue());
             logger.info("文件处理耗时：" + (System.currentTimeMillis() - startTime) / 1000 + " (秒)");
-
-            CompressFileGZIP.doCompressFile(path + "Write" + File.separator + fileName);
+            try {
+                CompressFileGZIP.doCompressFile(path + "Write" + File.separator + fileName);
+            }catch (Exception e){
+                e.printStackTrace();
+                logger.error(e.getMessage());
+                return;
+            }
             File file = new File(path + "Write" + File.separator + fileName + ".gz");
             logger.info(fileName + ".gz " + "文件大小：" + file.length());
             try {
@@ -594,6 +630,7 @@ public class SourceThread implements Runnable {
                                 int puschPrbAssn = Integer.parseInt(li.split("￥")[4]);
                                 int nbrCqi = Integer.parseInt(li.split("￥")[5]);
                                 int ulmeannl = Integer.parseInt(li.split("￥")[6]);
+                                int on1 = Integer.parseInt(li.split("￥")[8]);
                                 try {
                                     if (pdschPrbAssn == 1) {
                                         int pdschPrbAssnData = StringToInt(reader.get(RRU_PdschPrbAssn_position));
@@ -682,6 +719,22 @@ public class SourceThread implements Runnable {
                                     e.printStackTrace();
                                     logger.warn("aims: " + reader.get(2) + "\n源数据异常: " + e.getMessage());
                                 }
+
+                                try {
+                                    if (on1 == 1) {
+                                        logger.info("ERAB_HoFail_1 指标修正 当前：" + reader.get(2));
+                                        stringList[ERAB_HoFail_1]= String.valueOf(0);
+                                        logger.info("ERAB_NbrAttEstab_1 指标修正 当前：" + reader.get(2));
+                                        stringList[ERAB_NbrAttEstab_1]=stringList[ERAB_NbrSuccEstab_1];
+                                        logger.info("ERAB_NbrReqRelEnb_1 标修正 当前：" + reader.get(2));
+                                        stringList[ERAB_NbrReqRelEnb_1]=stringList[ERAB_NbrReqRelEnb_Normal_1];
+                                        logger.info("RRC_AttConnEstab 标修正 当前：" + reader.get(2));
+                                        stringList[RRC_AttConnEstab]=stringList[RRC_SuccConnEstab];
+                                    }
+                                } catch (Exception e) {
+                                    e.printStackTrace();
+                                    logger.warn("aims: " + reader.get(2) + "\n源数据异常: " + e.getMessage());
+                                }
                                 break;
                             }
                         }
@@ -692,11 +745,19 @@ public class SourceThread implements Runnable {
             reader.close();
             // 关闭Writer
             writerTemp.close();
-        } catch (IOException e) {
+        } catch (Exception e) {
             e.printStackTrace();
-            logger.error("文件流操作异常：" + e.getMessage());
+            logger.error("操作异常：" + e.getMessage());
         }
     }
+
+    private int ERAB_HoFail_1 = 0;
+    private int ERAB_NbrAttEstab_1 = 0;
+    private int ERAB_NbrSuccEstab_1 = 0;
+    private int ERAB_NbrReqRelEnb_1 = 0;
+    private int ERAB_NbrReqRelEnb_Normal_1 = 0;
+    private int RRC_AttConnEstab = 0;
+    private int RRC_SuccConnEstab = 0;
 
     private int RRU_PdschPrbAssn_position = 0;
     private int RRU_PdschPrbTot_position = 0;

@@ -1,3 +1,5 @@
+package model.omc_data_modify;
+
 import com.csvreader.CsvReader;
 import com.csvreader.CsvWriter;
 import com.jcraft.jsch.ChannelSftp;
@@ -16,12 +18,10 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-import java.util.Random;
 import java.util.concurrent.CountDownLatch;
 
 import static util.Const.*;
 import static util.FileUtil.isChartPathExist;
-import static util.Mathematical.StringToInt;
 
 /**
  * @author last_
@@ -33,7 +33,7 @@ public class ConnEstabThread implements Runnable {
 
     private Logger logger = Logger.getLogger(ConnEstabThread.class);
 
-    ConnEstabThread(CountDownLatch threadsSignal, Map.Entry<String, List<String>> sourceData) {
+    public ConnEstabThread(CountDownLatch threadsSignal, Map.Entry<String, List<String>> sourceData) {
         this.threadsSignal = threadsSignal;
         this.sourceData = sourceData;
     }

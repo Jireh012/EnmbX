@@ -75,6 +75,7 @@ public class PropertiesConfigs {
         props.load(in);
         Const.sourceFilePath = props.getProperty("sourceFilePath");
         Const.saveFilePath = props.getProperty("saveFilePath");
+        Const.aimsType=props.getProperty("aimsType");
 
         Const.TestModel =props.getProperty("TestModel");
         Const.TestFileNameMMss =props.getProperty("TestFileNameMMss");

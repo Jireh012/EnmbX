@@ -1,4 +1,5 @@
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import model.omc_to_sql.Source1Thread;
 import org.apache.log4j.Logger;
 import org.apache.poi.xssf.usermodel.XSSFCell;
 import org.apache.poi.xssf.usermodel.XSSFRow;
@@ -11,8 +12,6 @@ import util.SftpUtilM;
 import java.io.File;
 import java.io.FileInputStream;
 import java.sql.DriverManager;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;

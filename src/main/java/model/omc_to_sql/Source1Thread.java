@@ -1,3 +1,5 @@
+package model.omc_to_sql;
+
 import com.csvreader.CsvReader;
 import com.jcraft.jsch.ChannelSftp;
 import com.jcraft.jsch.SftpException;
@@ -15,7 +17,6 @@ import java.util.concurrent.CountDownLatch;
 
 import static util.Const.*;
 import static util.FileUtil.isChartPathExist;
-import static util.Mathematical.StringToInt;
 
 /**
  * @author last_
@@ -32,7 +33,7 @@ public class Source1Thread implements Runnable {
 
     private Logger logger = Logger.getLogger(Source1Thread.class);
 
-    Source1Thread(CountDownLatch threadsSignal, Map.Entry<String, String> sourceData, Map<String, Integer> downField) {
+    public Source1Thread(CountDownLatch threadsSignal, Map.Entry<String, String> sourceData, Map<String, Integer> downField) {
         this.threadsSignal = threadsSignal;
         this.sourceData = sourceData;
         this.downField = downField;
