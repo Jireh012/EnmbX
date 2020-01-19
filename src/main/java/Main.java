@@ -68,7 +68,7 @@ public class Main {
             int estab= (int)sheetRow.getCell(7).getNumericCellValue();
             int on1=(int)sheetRow.getCell(8).getNumericCellValue();
 
-            int sum01=pdschPrbAssn+puschPrbAssn+nbrCqi+ulmeannl;
+            int sum01=pdschPrbAssn+puschPrbAssn+nbrCqi+ulmeannl+on1;
 
             // map是否包含此key，若已经包含则添加一个新的数字到对应value集合中
             String e = source + "￥" + type1 + "￥" +
