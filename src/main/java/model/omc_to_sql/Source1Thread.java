@@ -50,11 +50,11 @@ public class Source1Thread implements Runnable {
             }
             for (final Map.Entry<String, Integer> map : downField.entrySet()) {
                 try {
-                    if (reader.get(i).equals(map.getKey().split("￥")[0])&& map.getKey().split("￥")[1].equals(type)) {
+                    if (reader.get(i).equals(map.getKey().split("￥")[0]) && map.getKey().split("￥")[1].equals(type)) {
                         map.setValue(i);
+                        System.out.println(reader.get(i)+"  "+i);
                         prefix.append(",[").append(map.getKey().split("￥")[0]).append("]");
                         c1++;
-                        //logger.info(prefix.toString());
                     }
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -63,7 +63,6 @@ public class Source1Thread implements Runnable {
             i++;
         }
 
-        System.out.println(c1);
         prefix.append(")values (?,?,?");
         for (int s = 1; s <= c1; s++) {
             prefix.append(",?");
@@ -84,7 +83,8 @@ public class Source1Thread implements Runnable {
     public void run() {
         logger.info(Thread.currentThread().getName() + "...开始...");
         Properties properties = SOURCE_PRO;
-        String source = sourceData.getKey();
+        String source = sourceData.getKey().split("￥")[0];
+        String type1 = sourceData.getKey().split("￥")[1];
         if (properties.get(source + ".user") == null) {
             logger.warn("SFTP连接参数错误,请检查sourceConfig配置文件!!!");
             threadsSignal.countDown();
@@ -103,12 +103,12 @@ public class Source1Thread implements Runnable {
             String str = null;
             long tttt = System.currentTimeMillis();
             if ("1".equals(TestModel)) {
-                logger.info("获取：" + TestDirNameYmDH + "/PM-ENB-EUTRANCELLTDD" + "-" +
+                logger.info("获取：" + TestDirNameYmDH + "/PM-ENB-EUTRANCELL" + type1 + "-" +
                         properties.get(source + ".id") + "-*-" + TestDirNameYmDH + TestFileNameMMss + "-15.csv.gz");
                 for (int t1 = 1; t1 <= ForCount; t1++) {
                     try {
                         str = SftpUtilM.listFiles(sftp, properties.get(source + ".path") + "/" +
-                                TestDirNameYmDH + "/PM-ENB-EUTRANCELLTDD" + "-" +
+                                TestDirNameYmDH + "/PM-ENB-EUTRANCELL" + type1 + "-" +
                                 properties.get(source + ".id") + "-*-" + TestDirNameYmDH + TestFileNameMMss + "-15.csv.gz").toString();
                     } catch (SftpException e) {
                         e.printStackTrace();
@@ -135,7 +135,7 @@ public class Source1Thread implements Runnable {
                 } else {
                     assert str != null;
                     String verSion = str.substring(str.indexOf("V"), str.indexOf("V") + 6);
-                    fileName = "PM-ENB-EUTRANCELLTDD" + "-" + properties.get(source + ".id") +
+                    fileName = "PM-ENB-EUTRANCELL"+type1 + "-" + properties.get(source + ".id") +
                             "-" + verSion + "-" + TestDirNameYmDH + TestFileNameMMss + "-15.csv";
                     logger.info("测试模式 文件名：" + fileName);
                     path = saveFilePath + TestDirNameYmDH + TestFileNameMMss + "_" + source + "_" + tttt + File.separator;
@@ -144,12 +144,12 @@ public class Source1Thread implements Runnable {
                             fileName + ".gz", path + fileName + ".gz");
                 }
             } else {
-                logger.info("获取：" + nowTime + "/PM-ENB-EUTRANCELLTDD" + "-" +
+                logger.info("获取：" + nowTime + "/PM-ENB-EUTRANCELL" +type1 + "-" +
                         properties.get(source + ".id") + "-*-" + nowTime + TimeMm + "-15.csv.gz");
                 for (int t1 = 1; t1 <= ForCount; t1++) {
                     try {
                         str = SftpUtilM.listFiles(sftp, properties.get(source + ".path") + "/" +
-                                nowTime + "/PM-ENB-EUTRANCELLTDD" + "-" +
+                                nowTime + "/PM-ENB-EUTRANCELL" +type1 + "-" +
                                 properties.get(source + ".id") + "-*-" + nowTime + TimeMm + "-15.csv.gz").toString();
                     } catch (SftpException e) {
                         e.printStackTrace();
@@ -177,7 +177,7 @@ public class Source1Thread implements Runnable {
                 } else {
                     assert str != null;
                     String verSion = str.substring(str.indexOf("V"), str.indexOf("V") + 6);
-                    fileName = "PM-ENB-EUTRANCELLTDD" + "-" + properties.get(source + ".id") + "-" +
+                    fileName = "PM-ENB-EUTRANCELL" +type1 + "-" + properties.get(source + ".id") + "-" +
                             verSion + "-" + nowTime + TimeMm + "-15.csv";
                     logger.info("正常模式 文件名：" + fileName);
                     path = saveFilePath + nowTime + TimeMm + "_" + source + "_" + tttt + File.separator;
@@ -212,6 +212,7 @@ public class Source1Thread implements Runnable {
             int count = 1;
             long begin = 0L;
             prefix = new StringBuffer();
+            StringBuilder s = new StringBuilder();
             if (value.equals("1.0")) {
                 // sql前缀
                 prefix.append("INSERT INTO [dbo].[LTEtemp_小区性能指标_15分钟_FTPtemp] ([rmUID],[UserLabel],[StartTime]");

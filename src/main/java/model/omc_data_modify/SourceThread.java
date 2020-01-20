@@ -42,7 +42,7 @@ public class SourceThread implements Runnable {
                 case "RRC.SuccConnEstab":
                     RRC_SuccConnEstab = i;
                     break;
-                case "RRU.AttConnEstab":
+                case "RRC.AttConnEstab":
                     RRC_AttConnEstab = i;
                     break;
                 case "ERAB.HoFail.1":
@@ -54,10 +54,10 @@ public class SourceThread implements Runnable {
                 case "ERAB.NbrSuccEstab.1":
                     ERAB_NbrSuccEstab_1 = i;
                     break;
-                case "ERAB_NbrReqRelEnb_1":
+                case "ERAB.NbrReqRelEnb.1":
                     ERAB_NbrReqRelEnb_1 = i;
                     break;
-                case "ERAB_NbrReqRelEnb_Normal_1":
+                case "ERAB.NbrReqRelEnb.Normal.1":
                     ERAB_NbrReqRelEnb_Normal_1 = i;
                     break;
 
@@ -708,16 +708,29 @@ public class SourceThread implements Runnable {
                                     logger.warn("aims: " + reader.get(2) + "\n源数据异常: " + e.getMessage());
                                 }
 
+
                                 try {
                                     if (on1 == 1) {
                                         logger.info("ERAB_HoFail_1 指标修正 当前：" + reader.get(2));
+                                        logger.info("ERAB_HoFail_1 指标修正 原值：" + stringList[ERAB_HoFail_1]);
                                         stringList[ERAB_HoFail_1] = String.valueOf(0);
+                                        logger.info("ERAB_HoFail_1 指标修正 值：" + String.valueOf(0));
+
                                         logger.info("ERAB_NbrAttEstab_1 指标修正 当前：" + reader.get(2));
+                                        logger.info("ERAB_NbrAttEstab_1 指标修正 原值：" + stringList[ERAB_NbrAttEstab_1]);
                                         stringList[ERAB_NbrAttEstab_1] = stringList[ERAB_NbrSuccEstab_1];
+                                        logger.info("ERAB_NbrAttEstab_1 指标修正 值：" + stringList[ERAB_NbrSuccEstab_1]);
+
                                         logger.info("ERAB_NbrReqRelEnb_1 标修正 当前：" + reader.get(2));
+                                        logger.info("ERAB_NbrReqRelEnb_1 标修正 原值：" + stringList[ERAB_NbrReqRelEnb_1]);
                                         stringList[ERAB_NbrReqRelEnb_1] = stringList[ERAB_NbrReqRelEnb_Normal_1];
+                                        logger.info("ERAB_NbrReqRelEnb_1 标修正 值：" + stringList[ERAB_NbrReqRelEnb_Normal_1]);
+
                                         logger.info("RRC_AttConnEstab 标修正 当前：" + reader.get(2));
+                                        logger.info("RRC_AttConnEstab 标修正 原值：" + stringList[RRC_AttConnEstab]);
                                         stringList[RRC_AttConnEstab] = stringList[RRC_SuccConnEstab];
+                                        logger.info("RRC_AttConnEstab 标修正 值：" + stringList[RRC_SuccConnEstab]);
+
                                     }
                                 } catch (Exception e) {
                                     e.printStackTrace();

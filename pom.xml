@@ -112,7 +112,7 @@
                         <manifest>
                             <addClasspath>true</addClasspath>
                             <classpathPrefix>lib/</classpathPrefix>
-                            <mainClass>Main</mainClass>
+                            <mainClass>Main2</mainClass>
                         </manifest>
                     </archive>
                 </configuration>
