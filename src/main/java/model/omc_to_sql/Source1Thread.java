@@ -12,6 +12,7 @@ import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.*;
 import java.util.concurrent.CountDownLatch;
 
@@ -29,7 +30,6 @@ public class Source1Thread implements Runnable {
     private int c1 = 0;
     private StringBuffer prefix;
     private String type;
-    private PreparedStatement pst;
 
     private Logger logger = Logger.getLogger(Source1Thread.class);
 
@@ -52,9 +52,6 @@ public class Source1Thread implements Runnable {
                 try {
                     if (reader.get(i).equals(map.getKey().split("￥")[0]) && map.getKey().split("￥")[1].equals(type)) {
                         map.setValue(i);
-                        System.out.println(reader.get(i)+"  "+i);
-                        prefix.append(",[").append(map.getKey().split("￥")[0]).append("]");
-                        c1++;
                     }
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -62,21 +59,6 @@ public class Source1Thread implements Runnable {
             }
             i++;
         }
-
-        prefix.append(")values (?,?,?");
-        for (int s = 1; s <= c1; s++) {
-            prefix.append(",?");
-        }
-        prefix.append(")");
-
-        logger.info("=======初始化sql前缀=======");
-        try {
-            pst = (PreparedStatement) conn.prepareStatement(prefix.toString());
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-
-        logger.info(prefix.toString());
     }
 
     @Override
@@ -209,10 +191,12 @@ public class Source1Thread implements Runnable {
             boolean isFirst = true;
             String[] sL;
             reader.readHeaders();
-            int count = 1;
+            int count = 0;
             long begin = 0L;
             prefix = new StringBuffer();
-            StringBuilder s = new StringBuilder();
+            // 保存sql后缀
+            StringBuffer suffix = new StringBuffer();
+
             if (value.equals("1.0")) {
                 // sql前缀
                 prefix.append("INSERT INTO [dbo].[LTEtemp_小区性能指标_15分钟_FTPtemp] ([rmUID],[UserLabel],[StartTime]");
@@ -220,7 +204,7 @@ public class Source1Thread implements Runnable {
                 // sql前缀
                 prefix.append("INSERT INTO [dbo].[LTEtemp_小区性能指标_15分钟_FTPtemp_5G] ([rmUID],[UserLabel],[StartTime]");
             }
-
+            boolean on1=true;
             // 读取每行的内容
             while (reader.readRecord()) {
                 if (isFirst) {
@@ -232,10 +216,10 @@ public class Source1Thread implements Runnable {
                     //每一行的值
                     sL = reader.getValues();
                     // 构建SQL后缀
-                    pst.setString(1, sL[0]);
-                    pst.setString(2, sL[2]);
-                    pst.setString(3, sL[3]);
-                    int count2 = 4;
+                    suffix.append("('"+sL[0]+"'"+ ",'"+sL[2]+"'"+",'"+sL[3]+"'" );
+
+                    logger.info(sL[0]);
+
                     //读取每个单元格
                     for (final Map.Entry<String, Integer> map : downField.entrySet()) {
                         for (int i = 0; i <= sL.length; i++) {
@@ -243,22 +227,32 @@ public class Source1Thread implements Runnable {
                                 if (begin == 0L) {
                                     begin = new Date().getTime();
                                 }
-                                pst.setFloat(count2, sL[i].isEmpty() ? 0 : Float.parseFloat(sL[i]));
-                                count2++;
+                                suffix.append(",'").append(sL[i].isEmpty()?"0":sL[i]).append("'");
+                                if (on1){
+                                    prefix.append(",[").append(map.getKey().split("￥")[0]).append("]");
+                                }
+                                logger.info(map.getKey().split("￥")[0]+" Value :"+sL[i]);
                             }
                         }
                     }
+                    on1=false;
                     count++;
-                    pst.addBatch();
+                    suffix.append("),");
                 }
             }
+            prefix.append(") VALUES");
+
             try {
-                // 执行操作
-                pst.executeBatch();
+                String sql = prefix + suffix.substring(0, suffix.length() - 1);
+                logger.info("Sql语句："+sql);
+                Statement stm =  conn.createStatement();
+                stm.addBatch(sql);
+                stm.executeBatch();
+
                 // 提交事务
                 conn.commit();
                 // 头等连接
-                pst.close();
+                stm.close();
             } catch (SQLException e) {
                 logger.error("数据库错误：" + e.getMessage());
             }

@@ -7,10 +7,7 @@ import com.jcraft.jsch.SftpException;
 import org.apache.log4j.Logger;
 import util.*;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.CountDownLatch;
@@ -580,6 +577,18 @@ public class SourceThread implements Runnable {
                 e.printStackTrace();
                 logger.error("SFTP操作异常：" + e.getMessage());
             }
+
+            logger.info("原文件上传166服务器");
+            FileInputStream in= null;
+            try {
+                in = new FileInputStream(new File(path + fileName));
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+                logger.warn("文件操作错误");
+            }
+
+            FtpUtil.uploadFile("10.212.194.166", "zhangyang",  "zhangyang", 221, source+nowTime, fileName, in);
+
         }
 
         // 线程结束时计数器减1
