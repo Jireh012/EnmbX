@@ -2,6 +2,7 @@
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
 import model.omc_data_modify.ConnEstabThread;
+import model.omc_data_modify.CoverEstabThread;
 import model.omc_data_modify.SourceThread;
 import org.apache.log4j.Logger;
 import org.apache.poi.xssf.usermodel.XSSFCell;
@@ -103,11 +104,14 @@ public class Main {
         int threadNum2 = map2.size();
         CountDownLatch threadSignal1 = new CountDownLatch(threadNum);
         CountDownLatch threadSignal2 = new CountDownLatch(threadNum2);
+        CountDownLatch threadSignal3 = new CountDownLatch(threadNum2);
         ThreadFactory threadFactory = new ThreadFactoryBuilder()
                 .setNameFormat("enmbx-pool-%d").setDaemon(true).build();
         ScheduledExecutorService executorService = new ScheduledThreadPoolExecutor(threadNum,
                 threadFactory);
         ScheduledExecutorService executorService2 = new ScheduledThreadPoolExecutor(threadNum2,
+                threadFactory);
+        ScheduledExecutorService executorService3 = new ScheduledThreadPoolExecutor(threadNum2,
                 threadFactory);
         for (Map.Entry<String, List<String>> entry : map.entrySet()) {
             Runnable task = new SourceThread(threadSignal1, entry);
@@ -119,6 +123,10 @@ public class Main {
             Runnable task = new ConnEstabThread(threadSignal2, entry);
             // 执行
             executorService2.execute(task);
+
+            Runnable task1 = new CoverEstabThread(threadSignal3, entry);
+            // 执行
+            executorService3.execute(task1);
         }
 
         // 等待所有子线程执行完

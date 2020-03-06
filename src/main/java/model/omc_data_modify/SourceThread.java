@@ -717,7 +717,6 @@ public class SourceThread implements Runnable {
                                     logger.warn("aims: " + reader.get(2) + "\n源数据异常: " + e.getMessage());
                                 }
 
-
                                 try {
                                     if (on1 == 1) {
                                         logger.info("ERAB_HoFail_1 指标修正 当前：" + reader.get(2));

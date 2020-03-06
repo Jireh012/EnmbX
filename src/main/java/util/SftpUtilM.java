@@ -331,6 +331,7 @@ public class SftpUtilM {
                 try {
                     sftp.cd(tempPath);
                 } catch (SftpException ex) {
+                    log.error("文件不存在"+directory);
                     sftp.mkdir(tempPath);
                     sftp.cd(tempPath);
                 }

@@ -26,14 +26,14 @@ import static util.FileUtil.isChartPathExist;
 /**
  * @author last_
  */
-public class ConnEstabThread implements Runnable {
+public class CoverEstabThread implements Runnable {
 
     private CountDownLatch threadsSignal;
     private Map.Entry<String, List<String>> sourceData;
 
-    private Logger logger = Logger.getLogger(ConnEstabThread.class);
+    private Logger logger = Logger.getLogger(CoverEstabThread.class);
 
-    public ConnEstabThread(CountDownLatch threadsSignal, Map.Entry<String, List<String>> sourceData) {
+    public CoverEstabThread(CountDownLatch threadsSignal, Map.Entry<String, List<String>> sourceData) {
         this.threadsSignal = threadsSignal;
         this.sourceData = sourceData;
     }
@@ -43,11 +43,11 @@ public class ConnEstabThread implements Runnable {
         //初始化相关列位置
         while (i < reader.getValues().length) {
             switch (reader.get(i)) {
-                case "NBRRC.SuccConnEstab":
-                    NBRRC_SuccConnEstab_position = i;
+                case "NBRRC.SuccConnEstabCL":
+                    NBRRC_SuccConnEstabCL_position = i;
                     break;
-                case "NBRRC.AttConnEstab":
-                    NBRRC_AttConnEstab_position = i;
+                case "NBRRC.AttConnEstabCL":
+                    NBRRC_AttConnEstabCL_position = i;
                     break;
                 default:
                     break;
@@ -80,12 +80,12 @@ public class ConnEstabThread implements Runnable {
             String str = null;
             long tttt = System.currentTimeMillis();
             if ("1".equals(TestModel)) {
-                logger.info("获取：" + TestDirNameYmDH + "/PM-NBIoT-EUTRANCELLNB-" +
+                logger.info("获取：" + TestDirNameYmDH + "/PM-NBIoT-CELLCOVERAGELEVELNB-" +
                         properties.get(source + ".id") + "-*-" + TestDirNameYmDH + TestFileNameMMss + "-15.csv.gz");
                 for (int t1 = 1; t1 <= ForCount; t1++) {
                     try {
                         str = SftpUtilM.listFiles(sftp, properties.get(source + ".path") + "/" +
-                                TestDirNameYmDH + "/PM-NBIoT-EUTRANCELLNB-" +
+                                TestDirNameYmDH + "/PM-NBIoT-CELLCOVERAGELEVELNB-" +
                                 properties.get(source + ".id") + "-*-" + TestDirNameYmDH + TestFileNameMMss + "-15.csv.gz").toString();
                     } catch (SftpException e) {
                         e.printStackTrace();
@@ -111,22 +111,27 @@ public class ConnEstabThread implements Runnable {
                     return;
                 } else {
                     assert str != null;
-                    String verSion = str.substring(str.indexOf("V"), str.indexOf("V") + 6);
-                    fileName = "PM-NBIoT-EUTRANCELLNB-" + properties.get(source + ".id") +
+                    String verSion = str.substring(str.indexOf("-V")+1, str.indexOf("-V") + 7);
+                    fileName = "PM-NBIoT-CELLCOVERAGELEVELNB-" + properties.get(source + ".id") +
                             "-" + verSion + "-" + TestDirNameYmDH + TestFileNameMMss + "-15.csv";
                     logger.info("测试模式 文件名：" + fileName);
                     path = saveFilePath + TestDirNameYmDH + TestFileNameMMss + "_" + source + "_" + type1 + tttt + File.separator;
                     isChartPathExist(path);
-                    SftpUtilM.download(sftp, properties.get(source + ".path") + "/" + TestDirNameYmDH,
-                            fileName + ".gz", path + fileName + ".gz");
+                    try {
+                        SftpUtilM.download(sftp, properties.get(source + ".path") + "/" + TestDirNameYmDH,
+                                fileName + ".gz", path + fileName + ".gz");
+                    }catch (Exception e){
+                        logger.error("下载失败源文件问题");
+                    }
+
                 }
             } else {
-                logger.info("获取：" + nowTime + "/PM-NBIoT-EUTRANCELLNB-" +
+                logger.info("获取：" + nowTime + "/PM-NBIoT-CELLCOVERAGELEVELNB-" +
                         properties.get(source + ".id") + "-*-" + nowTime + TimeMm + "-15.csv.gz");
                 for (int t1 = 1; t1 <= ForCount; t1++) {
                     try {
                         str = SftpUtilM.listFiles(sftp, properties.get(source + ".path") + "/" +
-                                nowTime + "/PM-NBIoT-EUTRANCELLNB-" +
+                                nowTime + "/PM-NBIoT-CELLCOVERAGELEVELNB-" +
                                 properties.get(source + ".id") + "-*-" + nowTime + TimeMm + "-15.csv.gz").toString();
                     } catch (SftpException e) {
                         e.printStackTrace();
@@ -153,8 +158,8 @@ public class ConnEstabThread implements Runnable {
                     return;
                 } else {
                     assert str != null;
-                    String verSion = str.substring(str.indexOf("V"), str.indexOf("V") + 6);
-                    fileName = "PM-NBIoT-EUTRANCELLNB-" + properties.get(source + ".id") + "-" +
+                    String verSion = str.substring(str.indexOf("-V")+1, str.indexOf("-V") + 7);
+                    fileName = "PM-NBIoT-CELLCOVERAGELEVELNB-" + properties.get(source + ".id") + "-" +
                             verSion + "-" + nowTime + TimeMm + "-15.csv";
                     logger.info("正常模式 文件名：" + fileName);
                     path = saveFilePath + nowTime + TimeMm + "_" + source + "_" + type1 + tttt + File.separator;
@@ -186,19 +191,19 @@ public class ConnEstabThread implements Runnable {
                     SftpUtilM.upload(sftp, "/", properties.get(source + ".path") + "/" +
                             nowTime, fileName + ".gz", is);
                 }
-                logger.info("=======" + source + type1 + "上传成功=======");
+                logger.info("=======" + source + type1 + "COVER上传成功=======");
                 long dalen;
                 if ("1".equals(TestModel)) {
                     dalen = SftpUtilM.listFiles1(sftp, properties.get(source + ".path") + "/" +
-                            TestDirNameYmDH + "/PM-NBIoT-EUTRANCELLNB-" +
+                            TestDirNameYmDH + "/PM-NBIoT-CELLCOVERAGELEVELNB-" +
                             properties.get(source + ".id") + "-*-" + TestDirNameYmDH + TestFileNameMMss + "-15.csv.gz").getSize();
-                    logger.info("PM-NBIoT-EUTRANCELLNB-" +
+                    logger.info("PM-NBIoT-CELLCOVERAGELEVELNB-" +
                             properties.get(source + ".id") + "-*-" + TestDirNameYmDH + TestFileNameMMss + "-15.csv.gz  文件大小为：" + dalen);
                 } else {
                     dalen = SftpUtilM.listFiles1(sftp, properties.get(source + ".path") + "/" +
-                            nowTime + "/PM-NBIoT-EUTRANCELLNB-" +
+                            nowTime + "/PM-NBIoT-CELLCOVERAGELEVELNB-" +
                             properties.get(source + ".id") + "-*-" + nowTime + TimeMm + "-15.csv.gz").getSize();
-                    logger.info("PM-NBIoT-EUTRANCELLNB-" +
+                    logger.info("PM-NBIoT-CELLCOVERAGELEVELNB-" +
                             properties.get(source + ".id") + "-*-" + nowTime + TimeMm + "-15.csv.gz  文件大小为：" + dalen);
                 }
             } catch (IOException e) {
@@ -239,14 +244,30 @@ public class ConnEstabThread implements Runnable {
                     //每一行的值
                     stringList = reader.getValues();
                     stringList[2] = "\"" + stringList[2] + "\"";
-                    if (value.toString().contains(reader.get(Integer.parseInt(Const.aimsType)) + "￥")) {
+                    if (value.toString().contains(reader.get(Integer.parseInt(Const.aimsType)).substring(0,reader.get(Integer.parseInt(Const.aimsType)).length()-17))){
                         for (String li : value) {
-                            if (reader.get(Integer.parseInt(Const.aimsType)).equals(li.split("￥")[2])) {
+                            if (reader.get(Integer.parseInt(Const.aimsType)).equals(li.split("￥")[2]+"-COVERAGE_LEVEL_0")) {
                                 logger.info(reader.get(Integer.parseInt(Const.aimsType)));
-                                logger.info("修改前Succ：" + stringList[NBRRC_SuccConnEstab_position]);
-                                logger.info("修改前Att：" + stringList[NBRRC_AttConnEstab_position]);
-                                stringList[NBRRC_SuccConnEstab_position] = stringList[NBRRC_AttConnEstab_position];
-                                logger.info("修改后Succ：" + stringList[NBRRC_SuccConnEstab_position]);
+                                logger.info("修改前SuccCL0：" + stringList[NBRRC_SuccConnEstabCL_position]);
+                                logger.info("修改前AttCL0：" + stringList[NBRRC_AttConnEstabCL_position]);
+                                stringList[NBRRC_SuccConnEstabCL_position] = stringList[NBRRC_AttConnEstabCL_position];
+                                logger.info("修改后SuccCL0：" + stringList[NBRRC_SuccConnEstabCL_position]);
+                                break;
+                            }
+                            if (reader.get(Integer.parseInt(Const.aimsType)).equals(li.split("￥")[2]+"-COVERAGE_LEVEL_1")) {
+                                logger.info(reader.get(Integer.parseInt(Const.aimsType)));
+                                logger.info("修改前SuccCL1：" + stringList[NBRRC_SuccConnEstabCL_position]);
+                                logger.info("修改前AttCL1：" + stringList[NBRRC_AttConnEstabCL_position]);
+                                stringList[NBRRC_SuccConnEstabCL_position] = stringList[NBRRC_AttConnEstabCL_position];
+                                logger.info("修改后SuccCL1：" + stringList[NBRRC_SuccConnEstabCL_position]);
+                                break;
+                            }
+                            if (reader.get(Integer.parseInt(Const.aimsType)).equals(li.split("￥")[2]+"-COVERAGE_LEVEL_2")) {
+                                logger.info(reader.get(Integer.parseInt(Const.aimsType)));
+                                logger.info("修改前SuccCL2：" + stringList[NBRRC_SuccConnEstabCL_position]);
+                                logger.info("修改前AttCL2：" + stringList[NBRRC_AttConnEstabCL_position]);
+                                stringList[NBRRC_SuccConnEstabCL_position] = stringList[NBRRC_AttConnEstabCL_position];
+                                logger.info("修改后SuccCL2：" + stringList[NBRRC_SuccConnEstabCL_position]);
                                 break;
                             }
                         }
@@ -263,6 +284,6 @@ public class ConnEstabThread implements Runnable {
         }
     }
 
-    private int NBRRC_SuccConnEstab_position = 0;
-    private int NBRRC_AttConnEstab_position = 0;
+    private int NBRRC_SuccConnEstabCL_position = 0;
+    private int NBRRC_AttConnEstabCL_position = 0;
 }
