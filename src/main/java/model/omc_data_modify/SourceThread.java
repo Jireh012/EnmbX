@@ -419,6 +419,20 @@ public class SourceThread implements Runnable {
                 case "PHY.ULMeanNL.PRB99":
                     PHY_ULMeanNL_PRB99_position = i;
                     break;
+
+                case "PDCP.UpOctDl":
+                    PDCP_UpOctDl = i;
+                    break;
+                case "PDCP.UpOctDl.9":
+                    PDCP_UpOctDl9 = i;
+                    break;
+                case "PDCP.UpOctUl":
+                    PDCP_UpOctUl = i;
+                    break;
+                case "PDCP.UpOctUl.9":
+                    PDCP_UpOctUl9 = i;
+                    break;
+
                 default:
                     break;
             }
@@ -579,7 +593,7 @@ public class SourceThread implements Runnable {
             }
 
             logger.info("原文件上传166服务器");
-            FileInputStream in= null;
+            FileInputStream in = null;
             try {
                 in = new FileInputStream(new File(path + fileName));
             } catch (FileNotFoundException e) {
@@ -587,7 +601,7 @@ public class SourceThread implements Runnable {
                 logger.warn("文件操作错误");
             }
 
-            FtpUtil.uploadFile("10.212.194.166", "zhangyang",  "zhangyang", 221, source+nowTime, fileName, in);
+            FtpUtil.uploadFile("10.212.194.166", "zhangyang", "zhangyang", 221, source + nowTime, fileName, in);
 
         }
 
@@ -628,6 +642,7 @@ public class SourceThread implements Runnable {
                                 int nbrCqi = Integer.parseInt(li.split("￥")[5]);
                                 int ulmeannl = Integer.parseInt(li.split("￥")[6]);
                                 int on1 = Integer.parseInt(li.split("￥")[8]);
+                                int on2 = Integer.parseInt(li.split("￥")[9]);
                                 try {
                                     if (pdschPrbAssn == 1) {
                                         int pdschPrbAssnData = StringToInt(reader.get(RRU_PdschPrbAssn_position));
@@ -744,6 +759,34 @@ public class SourceThread implements Runnable {
                                     e.printStackTrace();
                                     logger.warn("aims: " + reader.get(2) + "\n源数据异常: " + e.getMessage());
                                 }
+
+                                try {
+                                    if (on2 == 1) {
+                                        if (reader.get(PDCP_UpOctDl).equals("0")) {
+                                            logger.info("PDCP_UpOctDl 标修正 当前：" + reader.get(2));
+                                            int min = 0, max = 100;
+                                            double rd = (double) (min + (int) (Math.random() * ((max - min) + 1))) / 100;
+                                            stringList[PDCP_UpOctDl9] = String.valueOf(
+                                                    (int) (rd * 378820 / 100) * 100);
+                                            stringList[PDCP_UpOctDl]=stringList[PDCP_UpOctDl9];
+                                            logger.info("PDCP_UpOctDl 标修正 值：" + stringList[PDCP_UpOctDl]);
+                                        }
+
+                                        if (reader.get(PDCP_UpOctUl).equals("0")) {
+                                            logger.info("PDCP_UpOctUl 标修正 当前：" + reader.get(2));
+                                            int min = 0, max = 100;
+                                            double rd = (double) (min + (int) (Math.random() * ((max - min) + 1))) / 100;
+                                            stringList[PDCP_UpOctUl9] = String.valueOf(
+                                                    (int) (rd * 25064 / 100) * 100);
+                                            stringList[PDCP_UpOctUl]=stringList[PDCP_UpOctUl9];
+                                            logger.info("PDCP.UpOctUl 标修正 值：" + stringList[PDCP_UpOctUl9]);
+                                        }
+                                    }
+                                } catch (Exception e) {
+                                    e.printStackTrace();
+                                    logger.warn("aims: " + reader.get(2) + "\n源数据异常: " + e.getMessage());
+                                }
+
                                 break;
                             }
                         }
@@ -888,6 +931,13 @@ public class SourceThread implements Runnable {
     private int PHY_ULMeanNL_PRB97_position = 0;
     private int PHY_ULMeanNL_PRB98_position = 0;
     private int PHY_ULMeanNL_PRB99_position = 0;
+
+
+    private int PDCP_UpOctDl = 0;
+    private int PDCP_UpOctDl9 = 0;
+
+    private int PDCP_UpOctUl = 0;
+    private int PDCP_UpOctUl9 = 0;
 
     private int getPHYULMeanNLPRBPosition(int c) {
         switch (c) {
@@ -1135,5 +1185,6 @@ public class SourceThread implements Runnable {
                 return 0;
         }
     }
+
 
 }
