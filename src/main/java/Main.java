@@ -3,6 +3,7 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
 import model.omc_data_modify.ConnEstabThread;
 import model.omc_data_modify.CoverEstabThread;
+import model.omc_data_modify.SourceLteThread;
 import model.omc_data_modify.SourceThread;
 import org.apache.log4j.Logger;
 import org.apache.poi.xssf.usermodel.XSSFCell;
@@ -104,6 +105,7 @@ public class Main {
         int threadNum = map.size();
         int threadNum2 = map2.size();
         CountDownLatch threadSignal1 = new CountDownLatch(threadNum);
+        CountDownLatch threadSignalLte = new CountDownLatch(threadNum);
         CountDownLatch threadSignal2 = new CountDownLatch(threadNum2);
         CountDownLatch threadSignal3 = new CountDownLatch(threadNum2);
         ThreadFactory threadFactory = new ThreadFactoryBuilder()
@@ -114,10 +116,15 @@ public class Main {
                 threadFactory);
         ScheduledExecutorService executorService3 = new ScheduledThreadPoolExecutor(threadNum2,
                 threadFactory);
+        ScheduledExecutorService executorServiceLte = new ScheduledThreadPoolExecutor(threadNum,
+                threadFactory);
         for (Map.Entry<String, List<String>> entry : map.entrySet()) {
             Runnable task = new SourceThread(threadSignal1, entry);
             // 执行
             executorService.execute(task);
+            Runnable taskLte = new SourceLteThread(threadSignalLte, entry);
+            // 执行
+            executorServiceLte.execute(taskLte);
         }
 
         for (Map.Entry<String, List<String>> entry : map2.entrySet()) {
@@ -133,10 +140,14 @@ public class Main {
         // 等待所有子线程执行完
         threadSignal1.await();
         threadSignal2.await();
+        threadSignalLte.await();
         //固定线程池执行完成后 将释放掉资源 退出主进程
         //并不是终止线程的运行，而是禁止在这个Executor中添加新的任务
         executorService.shutdown();
         executorService2.shutdown();
+        executorService3.shutdown();
+        executorServiceLte.shutdown();
+
 
         SftpUtilM.logoutList();
         // do work end
