@@ -44,7 +44,9 @@ public class Source1Thread implements Runnable {
         //初始化相关列位置
         while (true) {
             try {
-                if (!(i < reader.getValues().length)) break;
+                if (!(i < reader.getValues().length)) {
+                    break;
+                }
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -225,7 +227,7 @@ public class Source1Thread implements Runnable {
                         for (int i = 0; i <= sL.length; i++) {
                             if (map.getValue() == i) {
                                 if (begin == 0L) {
-                                    begin = new Date().getTime();
+                                    begin = System.currentTimeMillis();
                                 }
                                 suffix.append(",'").append(sL[i].isEmpty()?"0":sL[i]).append("'");
                                 if (on1){

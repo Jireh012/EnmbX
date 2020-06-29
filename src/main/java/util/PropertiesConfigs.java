@@ -168,8 +168,9 @@ public class PropertiesConfigs {
             bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(filePath)));
             // 清空旧的文件
             // props.clear();
-            for (String key : keyValueMap.keySet())
+            for (String key : keyValueMap.keySet()) {
                 props.setProperty(key, keyValueMap.get(key));
+            }
             props.store(bw, "改变数据");
             System.out.println(props.getProperty("url"));
             bw.close();
