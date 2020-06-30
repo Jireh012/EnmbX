@@ -436,6 +436,13 @@ public class SourceLteThread implements Runnable {
                     PDCP_UpOctUl9 = i;
                     break;
 
+                case "PDCP.ThrpTimeDL":
+                    PDCP_ThrpTimeDL = i;
+                    break;
+                case "PDCP.ThrpTimeDL.9":
+                    PDCP_ThrpTimeDL9 = i;
+                    break;
+
                 default:
                     break;
             }
@@ -647,6 +654,8 @@ public class SourceLteThread implements Runnable {
                                 int ulmeannl = Integer.parseInt(li.split("￥")[6]);
                                 int on1 = Integer.parseInt(li.split("￥")[8]);
                                 int on2 = Integer.parseInt(li.split("￥")[9]);
+                                int on3 = Integer.parseInt(li.split("￥")[10]);
+
                                 try {
                                     if (pdschPrbAssn == 1) {
                                         int pdschPrbAssnData = StringToInt(reader.get(RRU_PdschPrbAssn_position));
@@ -784,6 +793,32 @@ public class SourceLteThread implements Runnable {
                                                     (int) (rd * 25064 / 100) * 100);
                                             stringList[PDCP_UpOctUl]=stringList[PDCP_UpOctUl9];
                                             logger.info("PDCP.UpOctUl 标修正 值：" + stringList[PDCP_UpOctUl9]);
+                                        }
+                                    }
+                                } catch (Exception e) {
+                                    e.printStackTrace();
+                                    logger.warn("aims: " + reader.get(2) + "\n源数据异常: " + e.getMessage());
+                                }
+
+                                try {
+                                    if (on3 == 1) {
+                                        int PDCP_UpOctDlData = (int)Float.parseFloat(reader.get(PDCP_UpOctDl));
+                                        int PDCP_ThrpTimeDLData = (int)Float.parseFloat(reader.get(PDCP_ThrpTimeDL));
+                                        int PDCP_ThrpTimeDL9Data = (int)Float.parseFloat(reader.get(PDCP_ThrpTimeDL9));
+                                        int data = PDCP_UpOctDlData * 8 / PDCP_ThrpTimeDLData;
+
+                                        if (data < 20) {
+                                            logger.info("ON3 修正 " + reader.get(2) + " " + data);
+                                            int min = 100, max = 110;
+                                            double rd = (double) (min + (int) (Math.random() * ((max - min) + 1))) / 100;
+                                            logger.info("PDCP_ThrpTimeDL9 修正前：" + stringList[PDCP_ThrpTimeDL9]);
+                                            stringList[PDCP_ThrpTimeDL9] = String.valueOf((int)(PDCP_UpOctDlData * 8 / (rd * 20)));
+                                            logger.info("PDCP_ThrpTimeDL9 修正后：" + stringList[PDCP_ThrpTimeDL9]);
+
+                                            logger.info("PDCP_ThrpTimeDL 修正前：" + stringList[PDCP_ThrpTimeDL]);
+                                            stringList[PDCP_ThrpTimeDL] = String.valueOf(PDCP_ThrpTimeDLData +
+                                                    (int)(Float.parseFloat(stringList[PDCP_ThrpTimeDL9]) - PDCP_ThrpTimeDL9Data));
+                                            logger.info("PDCP_ThrpTimeDL 修正前：" + stringList[PDCP_ThrpTimeDL]);
                                         }
                                     }
                                 } catch (Exception e) {
@@ -942,6 +977,9 @@ public class SourceLteThread implements Runnable {
 
     private int PDCP_UpOctUl = 0;
     private int PDCP_UpOctUl9 = 0;
+
+    private int PDCP_ThrpTimeDL = 0;
+    private int PDCP_ThrpTimeDL9 = 0;
 
     private int getPHYULMeanNLPRBPosition(int c) {
         switch (c) {
