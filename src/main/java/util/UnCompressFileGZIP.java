@@ -60,7 +60,6 @@ public class UnCompressFileGZIP {
 
         } catch (Exception e) {
             e.printStackTrace();
-            System.exit(1);
             logger.error("文件解压异常: "+e.getMessage());
         }
 

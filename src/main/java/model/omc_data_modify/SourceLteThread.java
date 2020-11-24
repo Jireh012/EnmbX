@@ -498,7 +498,7 @@ public class SourceLteThread implements Runnable {
                         }
                     }
                 }
-                if ("[]".equals(str)) {
+                if ("[]".equals(str)|| str == null) {
                     threadsSignal.countDown();//必须等核心处理逻辑处理完成后才可以减1
                     logger.info(Thread.currentThread().getName() + "结束. 还有"
                             + threadsSignal.getCount() + " 个线程");
@@ -540,7 +540,7 @@ public class SourceLteThread implements Runnable {
                     }
 
                 }
-                if ("[]".equals(str)) {
+                if ("[]".equals(str) || str == null) {
                     logger.info("文件检索不到退出");
                     threadsSignal.countDown();//必须等核心处理逻辑处理完成后才可以减1
                     logger.info(Thread.currentThread().getName() + "结束. 还有"
