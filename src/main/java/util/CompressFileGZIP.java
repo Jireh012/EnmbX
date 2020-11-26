@@ -25,7 +25,6 @@ public class CompressFileGZIP {
             } catch(FileNotFoundException e) {
 
                 System.err.println("Could not create file: " + outFileName);
-                System.exit(1);
             }
 
             FileInputStream in = null;
@@ -33,7 +32,6 @@ public class CompressFileGZIP {
                 in = new FileInputStream(inFileName);
             } catch (FileNotFoundException e) {
                 System.err.println("File not found. " + inFileName);
-                System.exit(1);
             }
 
             byte[] buf = new byte[1024];
@@ -48,7 +46,6 @@ public class CompressFileGZIP {
 
         } catch (IOException e) {
             e.printStackTrace();
-            System.exit(1);
         }
 
     }

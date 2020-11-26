@@ -469,8 +469,8 @@ public class SourceLteThread implements Runnable {
         } else {
             String type1 = sourceData.getKey().split("￥")[1];
             logger.info("SFTP登陆成功耗时：" + (System.currentTimeMillis() - startTime) / 1000 + " (秒)");
-            String path;
-            String fileName;
+            String path = null;
+            String fileName = null;
             String str = null;
             long tttt = System.currentTimeMillis();
             if ("1".equals(TestModel)) {
@@ -541,11 +541,7 @@ public class SourceLteThread implements Runnable {
 
                 }
                 if ("[]".equals(str) || str == null) {
-                    logger.info("文件检索不到退出");
-                    threadsSignal.countDown();//必须等核心处理逻辑处理完成后才可以减1
-                    logger.info(Thread.currentThread().getName() + "结束. 还有"
-                            + threadsSignal.getCount() + " 个线程");
-                    return;
+                    exit();
                 } else {
                     assert str != null;
                     String verSion = str.substring(str.indexOf("V"), str.indexOf("V") + 6);
@@ -555,13 +551,22 @@ public class SourceLteThread implements Runnable {
                     path = saveFilePath + nowTime + TimeMm + "_" + source + "_" + type1 + tttt + File.separator;
                     isChartPathExist(path);
                     logger.info("========开始下载文件========");
-                    SftpUtilM.download(sftp, properties.get(source + ".path") + "/" + nowTime,
-                            fileName + ".gz", path + fileName + ".gz");
-                    logger.info("========开始删除文件========");
-                    SftpUtilM.delete(sftp, properties.get(source + ".path") + "/" + nowTime, fileName + ".gz");
+                    try{
+                        SftpUtilM.download(sftp, properties.get(source + ".path") + "/" + nowTime,fileName + ".gz", path + fileName + ".gz");
+                        logger.info("========开始删除文件========");
+                        SftpUtilM.delete(sftp, properties.get(source + ".path") + "/" + nowTime, fileName + ".gz");
+                    }catch (Exception e){
+                        logger.error(e.getMessage());
+                        exit();
+                    }
                 }
             }
-            UnCompressFileGZIP.doUncompressFile(path + fileName + ".gz");
+            try{
+                UnCompressFileGZIP.doUncompressFile(path + fileName + ".gz");
+            }catch (Exception e){
+                logger.error(e.getMessage());
+                exit();
+            }
             isChartPathExist(path + "Write" + File.separator);
             File y1 = new File(path + fileName + ".gz");
             logger.info(fileName + ".gz " + "原文件大小：" + y1.length());
@@ -621,6 +626,14 @@ public class SourceLteThread implements Runnable {
         logger.info(Thread.currentThread().getName() + "结束. 还有"
                 + threadsSignal.getCount() + " 个线程 耗时：" +
                 (System.currentTimeMillis() - startTime) / 1000 + " (秒)");
+    }
+
+    private void exit(){
+        logger.info("文件检索不到退出");
+        threadsSignal.countDown();//必须等核心处理逻辑处理完成后才可以减1
+        logger.info(Thread.currentThread().getName() + "结束. 还有"
+                + threadsSignal.getCount() + " 个线程");
+        return;
     }
 
     private void csvRun(String readerPath, String writePath, List<String> value) {

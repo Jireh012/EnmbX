@@ -25,7 +25,6 @@ public class UnCompressFileGZIP {
 
             if (!getExtension(inFileName).equalsIgnoreCase("gz")) {
                 System.err.println("File name must have extension of \".gz\"");
-                System.exit(1);
             }
 
             FileInputStream input = new FileInputStream(inFileName);
