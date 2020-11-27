@@ -5,6 +5,7 @@ import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
 
 import java.io.*;
+import java.nio.charset.Charset;
 import java.util.Properties;
 import java.util.Vector;
 
@@ -166,6 +167,28 @@ public class SftpUtilM {
             if (session != null) {
                 if (session.isConnected()) {
                     session.disconnect();
+                }
+            }
+        }
+
+        if (SSH_CHANNEL_POOL.size()>0){
+            for (Channel channel : SSH_CHANNEL_POOL.values()) {
+                Session session = null;
+                try {
+                    session = channel.getSession();
+                } catch (JSchException e) {
+                    e.printStackTrace();
+                }
+                ChannelExec ssh = (ChannelExec) channel;
+                if (ssh != null) {
+                    if (ssh.isConnected()) {
+                        ssh.disconnect();
+                    }
+                }
+                if (session != null) {
+                    if (session.isConnected()) {
+                        session.disconnect();
+                    }
                 }
             }
         }
@@ -339,6 +362,88 @@ public class SftpUtilM {
         }
         return sftp.lstat(directory);
     }
+
+
+    /**
+     * 连接ssh服务器
+     */
+    public static ChannelExec loginSsh(String username, String password, String host, int port) {
+        ChannelExec ssh = null;
+        try {
+            if (SSH_CHANNEL_POOL.get(host) == null) {
+                JSch jsch = new JSch();
+                Session session = jsch.getSession(username, host, port);
+
+                if (password != null) {
+                    session.setPassword(password);
+                }
+                Properties config = new Properties();
+                config.put("StrictHostKeyChecking", "no");
+
+                if ("true".equals(isProxy)) {
+                    switch (ProxyProtocol) {
+                        case 1:
+                            ProxySOCKS5 proxySOCKS5 = new ProxySOCKS5(ProxyAddress, ProxyPort);
+                            proxySOCKS5.setUserPasswd(ProxyName, ProxyPassword);
+                            session.setProxy(proxySOCKS5);
+                            break;
+                        case 2:
+                            ProxySOCKS4 proxySOCKS4 = new ProxySOCKS4(ProxyAddress, ProxyPort);
+                            proxySOCKS4.setUserPasswd(ProxyName, ProxyPassword);
+                            session.setProxy(proxySOCKS4);
+                            break;
+                        case 3:
+                            ProxyHTTP proxyHTTP = new ProxyHTTP(ProxyAddress, ProxyPort);
+                            proxyHTTP.setUserPasswd(ProxyName, ProxyPassword);
+                            session.setProxy(proxyHTTP);
+                            break;
+                        default:
+                    }
+                }
+                session.setConfig(config);
+                session.connect();
+
+                Channel channel = session.openChannel("exec");
+                channel.connect();
+                SSH_CHANNEL_POOL.put(host, channel);
+                ssh = (ChannelExec) channel;
+                log.info("该channel是新连接的，ID为：" + channel.getId());
+            } else {
+                Channel channel = SSH_CHANNEL_POOL.get(host);
+                Session session = channel.getSession();
+                if (!session.isConnected()) {
+                    session.connect();
+                }
+                if (!channel.isConnected()) {
+                    channel.connect();
+                }
+                ssh = (ChannelExec) channel;
+                log.info("该channel从map中获取的，ID为：" + channel.getId());
+            }
+        } catch (JSchException e) {
+            e.printStackTrace();
+            log.error("SFTP——JSch异常：" + e.getMessage());
+        }
+        return ssh;
+    }
+
+
+    public void runCmd(ChannelExec ssh,String cmd, String charset) throws Exception
+    {
+        ssh.setCommand(cmd);
+        ssh.setInputStream(null);
+        ssh.setErrStream(System.err);
+        ssh.connect();
+        InputStream in = ssh.getInputStream();
+        BufferedReader reader = new BufferedReader(new InputStreamReader(in, Charset.forName(charset)));
+        String buf = null;
+        while ((buf = reader.readLine()) != null)
+        {
+            System.out.println(buf);
+        }
+        reader.close();
+    }
+
 
     //上传文件测试
     public static void main(String[] args) throws SftpException, IOException {
