@@ -152,6 +152,7 @@ public class CoverEstabThread implements Runnable {
 
                 }
                 if ("[]".equals(str)|| str == null) {
+                    logger.warn("文件不存在,退出");
                     threadsSignal.countDown();//必须等核心处理逻辑处理完成后才可以减1
                     logger.info(Thread.currentThread().getName() + "结束. 还有"
                             + threadsSignal.getCount() + " 个线程");

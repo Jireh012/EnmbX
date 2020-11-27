@@ -141,6 +141,7 @@ public class Main {
         // 等待所有子线程执行完
         threadSignal1.await();
         threadSignal2.await();
+        threadSignal3.await();
         threadSignalLte.await();
         //固定线程池执行完成后 将释放掉资源 退出主进程
         //并不是终止线程的运行，而是禁止在这个Executor中添加新的任务
@@ -148,7 +149,6 @@ public class Main {
         executorService2.shutdown();
         executorService3.shutdown();
         executorServiceLte.shutdown();
-
 
         SftpUtilM.logoutList();
         // do work end

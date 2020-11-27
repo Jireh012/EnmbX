@@ -1,3 +1,5 @@
+package test;
+
 import org.apache.commons.codec.digest.DigestUtils;
 import util.MD4;
 

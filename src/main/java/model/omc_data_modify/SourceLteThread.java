@@ -498,7 +498,7 @@ public class SourceLteThread implements Runnable {
                         }
                     }
                 }
-                if ("[]".equals(str)|| str == null) {
+                if ("[]".equals(str) || str == null) {
                     threadsSignal.countDown();//必须等核心处理逻辑处理完成后才可以减1
                     logger.info(Thread.currentThread().getName() + "结束. 还有"
                             + threadsSignal.getCount() + " 个线程");
@@ -541,7 +541,11 @@ public class SourceLteThread implements Runnable {
 
                 }
                 if ("[]".equals(str) || str == null) {
-                    exit();
+                    logger.warn("文件不存在,exit");
+                    threadsSignal.countDown();//必须等核心处理逻辑处理完成后才可以减1
+                    logger.info(Thread.currentThread().getName() + "结束. 还有"
+                            + threadsSignal.getCount() + " 个线程");
+                    return;
                 } else {
                     assert str != null;
                     String verSion = str.substring(str.indexOf("V"), str.indexOf("V") + 6);
@@ -551,22 +555,20 @@ public class SourceLteThread implements Runnable {
                     path = saveFilePath + nowTime + TimeMm + "_" + source + "_" + type1 + tttt + File.separator;
                     isChartPathExist(path);
                     logger.info("========开始下载文件========");
-                    try{
-                        SftpUtilM.download(sftp, properties.get(source + ".path") + "/" + nowTime,fileName + ".gz", path + fileName + ".gz");
+                    try {
+                        SftpUtilM.download(sftp, properties.get(source + ".path") + "/" + nowTime, fileName + ".gz", path + fileName + ".gz");
                         logger.info("========开始删除文件========");
                         SftpUtilM.delete(sftp, properties.get(source + ".path") + "/" + nowTime, fileName + ".gz");
-                    }catch (Exception e){
+                    } catch (Exception e) {
                         logger.error(e.getMessage());
-                        exit();
+                        threadsSignal.countDown();//必须等核心处理逻辑处理完成后才可以减1
+                        logger.info(Thread.currentThread().getName() + "结束. 还有"
+                                + threadsSignal.getCount() + " 个线程");
+                        return;
                     }
                 }
             }
-            try{
-                UnCompressFileGZIP.doUncompressFile(path + fileName + ".gz");
-            }catch (Exception e){
-                logger.error(e.getMessage());
-                exit();
-            }
+            UnCompressFileGZIP.doUncompressFile(path + fileName + ".gz");
             isChartPathExist(path + "Write" + File.separator);
             File y1 = new File(path + fileName + ".gz");
             logger.info(fileName + ".gz " + "原文件大小：" + y1.length());
@@ -628,12 +630,10 @@ public class SourceLteThread implements Runnable {
                 (System.currentTimeMillis() - startTime) / 1000 + " (秒)");
     }
 
-    private void exit(){
-        logger.info("文件检索不到退出");
+    private void exit() {
         threadsSignal.countDown();//必须等核心处理逻辑处理完成后才可以减1
         logger.info(Thread.currentThread().getName() + "结束. 还有"
                 + threadsSignal.getCount() + " 个线程");
-        return;
     }
 
     private void csvRun(String readerPath, String writePath, List<String> value) {
@@ -686,7 +686,7 @@ public class SourceLteThread implements Runnable {
                                     }
                                 } catch (Exception e) {
                                     e.printStackTrace();
-                                    logger.warn("aims: " + reader.get(2) + "\n源数据异常: " + e.getMessage());
+                                    logger.warn("pdschPrbAssn aims: " + reader.get(2) + "\n源数据异常: " + e.getMessage());
                                 }
 
                                 try {
@@ -701,7 +701,7 @@ public class SourceLteThread implements Runnable {
                                             double rd = (double) (min + (int) (Math.random() * ((max - min) + 1))) / 100;
                                             stringList[RRU_PuschPrbAssn_position] = String.valueOf(
                                                     (int) (rd * puschPrbAssnData / 100) * 100);
-                                            logger.info("上行指标 修改后值：" + stringList[RRU_PuschPrbAssn_position]);
+                                            logger.info("puschPrbAssn 上行指标 修改后值：" + stringList[RRU_PuschPrbAssn_position]);
                                         }
                                     }
                                 } catch (Exception e) {
@@ -737,7 +737,7 @@ public class SourceLteThread implements Runnable {
                                     }
                                 } catch (Exception e) {
                                     e.printStackTrace();
-                                    logger.warn("aims: " + reader.get(2) + "\n源数据异常: " + e.getMessage());
+                                    logger.warn("nbrCqi aims: " + reader.get(2) + "\n源数据异常: " + e.getMessage());
                                 }
 
                                 try {
@@ -755,7 +755,7 @@ public class SourceLteThread implements Runnable {
                                     }
                                 } catch (Exception e) {
                                     e.printStackTrace();
-                                    logger.warn("aims: " + reader.get(2) + "\n源数据异常: " + e.getMessage());
+                                    logger.warn("ulmeannl aims: " + reader.get(2) + "\n源数据异常: " + e.getMessage());
                                 }
 
                                 try {
@@ -783,7 +783,7 @@ public class SourceLteThread implements Runnable {
                                     }
                                 } catch (Exception e) {
                                     e.printStackTrace();
-                                    logger.warn("aims: " + reader.get(2) + "\n源数据异常: " + e.getMessage());
+                                    logger.warn("on1 aims: " + reader.get(2) + "\n源数据异常: " + e.getMessage());
                                 }
 
                                 try {
@@ -794,7 +794,7 @@ public class SourceLteThread implements Runnable {
                                             double rd = (double) (min + (int) (Math.random() * ((max - min) + 1))) / 100;
                                             stringList[PDCP_UpOctDl9] = String.valueOf(
                                                     (int) (rd * 378820 / 100) * 100);
-                                            stringList[PDCP_UpOctDl]=stringList[PDCP_UpOctDl9];
+                                            stringList[PDCP_UpOctDl] = stringList[PDCP_UpOctDl9];
                                             logger.info("PDCP_UpOctDl 标修正 值：" + stringList[PDCP_UpOctDl]);
                                         }
 
@@ -804,20 +804,20 @@ public class SourceLteThread implements Runnable {
                                             double rd = (double) (min + (int) (Math.random() * ((max - min) + 1))) / 100;
                                             stringList[PDCP_UpOctUl9] = String.valueOf(
                                                     (int) (rd * 25064 / 100) * 100);
-                                            stringList[PDCP_UpOctUl]=stringList[PDCP_UpOctUl9];
+                                            stringList[PDCP_UpOctUl] = stringList[PDCP_UpOctUl9];
                                             logger.info("PDCP.UpOctUl 标修正 值：" + stringList[PDCP_UpOctUl9]);
                                         }
                                     }
                                 } catch (Exception e) {
                                     e.printStackTrace();
-                                    logger.warn("aims: " + reader.get(2) + "\n源数据异常: " + e.getMessage());
+                                    logger.warn("on2 aims: " + reader.get(2) + "\n源数据异常: " + e.getMessage());
                                 }
 
                                 try {
                                     if (on3 == 1) {
-                                        int PDCP_UpOctDlData = (int)Float.parseFloat(reader.get(PDCP_UpOctDl));
-                                        int PDCP_ThrpTimeDLData = (int)Float.parseFloat(reader.get(PDCP_ThrpTimeDL));
-                                        int PDCP_ThrpTimeDL9Data = (int)Float.parseFloat(reader.get(PDCP_ThrpTimeDL9));
+                                        int PDCP_UpOctDlData = (int) Float.parseFloat(reader.get(PDCP_UpOctDl));
+                                        int PDCP_ThrpTimeDLData = (int) Float.parseFloat(reader.get(PDCP_ThrpTimeDL));
+                                        int PDCP_ThrpTimeDL9Data = (int) Float.parseFloat(reader.get(PDCP_ThrpTimeDL9));
                                         int data = PDCP_UpOctDlData * 8 / PDCP_ThrpTimeDLData;
 
                                         if (data < 20) {
@@ -825,18 +825,18 @@ public class SourceLteThread implements Runnable {
                                             int min = 100, max = 110;
                                             double rd = (double) (min + (int) (Math.random() * ((max - min) + 1))) / 100;
                                             logger.info("PDCP_ThrpTimeDL9 修正前：" + stringList[PDCP_ThrpTimeDL9]);
-                                            stringList[PDCP_ThrpTimeDL9] = String.valueOf((int)(PDCP_UpOctDlData * 8 / (rd * 20)));
+                                            stringList[PDCP_ThrpTimeDL9] = String.valueOf((int) (PDCP_UpOctDlData * 8 / (rd * 20)));
                                             logger.info("PDCP_ThrpTimeDL9 修正后：" + stringList[PDCP_ThrpTimeDL9]);
 
                                             logger.info("PDCP_ThrpTimeDL 修正前：" + stringList[PDCP_ThrpTimeDL]);
                                             stringList[PDCP_ThrpTimeDL] = String.valueOf(PDCP_ThrpTimeDLData +
-                                                    (int)(Float.parseFloat(stringList[PDCP_ThrpTimeDL9]) - PDCP_ThrpTimeDL9Data));
+                                                    (int) (Float.parseFloat(stringList[PDCP_ThrpTimeDL9]) - PDCP_ThrpTimeDL9Data));
                                             logger.info("PDCP_ThrpTimeDL 修正前：" + stringList[PDCP_ThrpTimeDL]);
                                         }
                                     }
                                 } catch (Exception e) {
                                     e.printStackTrace();
-                                    logger.warn("aims: " + reader.get(2) + "\n源数据异常: " + e.getMessage());
+                                    logger.warn("on3 aims: " + reader.get(2) + "\n源数据异常: " + e.getMessage());
                                 }
 
                                 break;

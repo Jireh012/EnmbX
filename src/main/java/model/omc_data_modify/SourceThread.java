@@ -494,6 +494,7 @@ public class SourceThread implements Runnable {
                     }
                 }
                 if ("[]".equals(str)|| str == null) {
+                    logger.warn("文件不存在,exit");
                     threadsSignal.countDown();//必须等核心处理逻辑处理完成后才可以减1
                     logger.info(Thread.currentThread().getName() + "结束. 还有"
                             + threadsSignal.getCount() + " 个线程");
@@ -536,6 +537,7 @@ public class SourceThread implements Runnable {
 
                 }
                 if ("[]".equals(str)|| str == null) {
+                    logger.warn("文件不存在,exit");
                     threadsSignal.countDown();//必须等核心处理逻辑处理完成后才可以减1
                     logger.info(Thread.currentThread().getName() + "结束. 还有"
                             + threadsSignal.getCount() + " 个线程");
@@ -666,7 +668,7 @@ public class SourceThread implements Runnable {
                                     }
                                 } catch (Exception e) {
                                     e.printStackTrace();
-                                    logger.warn("aims: " + reader.get(2) + "\n源数据异常: " + e.getMessage());
+                                    logger.warn("pdschPrbAssn aims: " + reader.get(2) + "\n源数据异常: " + e.getMessage());
                                 }
 
                                 try {
@@ -686,7 +688,7 @@ public class SourceThread implements Runnable {
                                     }
                                 } catch (Exception e) {
                                     e.printStackTrace();
-                                    logger.warn("aims: " + reader.get(2) + "\n源数据异常: " + e.getMessage());
+                                    logger.warn("puschPrbAssn aims: " + reader.get(2) + "\n源数据异常: " + e.getMessage());
                                 }
 
                                 try {
@@ -717,7 +719,7 @@ public class SourceThread implements Runnable {
                                     }
                                 } catch (Exception e) {
                                     e.printStackTrace();
-                                    logger.warn("aims: " + reader.get(2) + "\n源数据异常: " + e.getMessage());
+                                    logger.warn("nbrCqi aims: " + reader.get(2) + "\n源数据异常: " + e.getMessage());
                                 }
 
                                 try {
@@ -735,7 +737,7 @@ public class SourceThread implements Runnable {
                                     }
                                 } catch (Exception e) {
                                     e.printStackTrace();
-                                    logger.warn("aims: " + reader.get(2) + "\n源数据异常: " + e.getMessage());
+                                    logger.warn("ulmeannl aims: " + reader.get(2) + "\n源数据异常: " + e.getMessage());
                                 }
 
                                 try {
@@ -763,7 +765,7 @@ public class SourceThread implements Runnable {
                                     }
                                 } catch (Exception e) {
                                     e.printStackTrace();
-                                    logger.warn("aims: " + reader.get(2) + "\n源数据异常: " + e.getMessage());
+                                    logger.warn("on1 aims: " + reader.get(2) + "\n源数据异常: " + e.getMessage());
                                 }
 
                                 try {
@@ -790,7 +792,7 @@ public class SourceThread implements Runnable {
                                     }
                                 } catch (Exception e) {
                                     e.printStackTrace();
-                                    logger.warn("aims: " + reader.get(2) + "\n源数据异常: " + e.getMessage());
+                                    logger.warn("on2 aims: " + reader.get(2) + "\n源数据异常: " + e.getMessage());
                                 }
 
                                 try {
@@ -816,7 +818,7 @@ public class SourceThread implements Runnable {
                                     }
                                 } catch (Exception e) {
                                     e.printStackTrace();
-                                    logger.warn("aims: " + reader.get(2) + "\n源数据异常: " + e.getMessage());
+                                    logger.warn("on3 aims: " + reader.get(2) + "\n源数据异常: " + e.getMessage());
                                 }
 
                                 break;
